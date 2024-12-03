@@ -148,7 +148,7 @@ INTERNAL_APPS = {
 }
 
 # Custom SVG icons as strings
-CLICKUP_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+CLICKUP_ICON = """<svg viewBox="0 0 100 100" style="width: 1.5em; height: 1.5em;">
     <path d="M50 25 L75 40 L75 60 L50 75 L25 60 L25 40 Z" fill="url(#clickup-gradient)" />
     <defs>
         <linearGradient id="clickup-gradient" gradientTransform="rotate(90)">
@@ -159,27 +159,36 @@ CLICKUP_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
     </defs>
 </svg>"""
 
-GDRIVE_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+GDRIVE_ICON = """<svg viewBox="0 0 100 100" style="width: 1.5em; height: 1.5em;">
     <path d="M6.4 87.5l8.3-14.1h71l-8.3 14.1z" fill="#3777E3"/>
     <path d="M49.8 25.3l-20.2 34.9 20.2 34.9 20.2-34.9z" fill="#FFCF63"/>
     <path d="M6.4 87.5l20.2-34.9 20.2-34.9h-20.2l-20.2 34.9z" fill="#11A861"/>
     <path d="M93.6 87.5l-20.2-34.9-20.2-34.9h20.2l20.2 34.9z" fill="#E53F35"/>
 </svg>"""
 
-QUARTZY_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+QUARTZY_ICON = """<svg viewBox="0 0 100 100" style="width: 1.5em; height: 1.5em;">
     <circle cx="50" cy="50" r="45" fill="#FF6B42"/>
     <path d="M35 30h30v25c0 15-15 15-15 15s-15 0-15-15V30z" fill="white"/>
     <circle cx="50" cy="45" r="5" fill="#FF6B42"/>
 </svg>"""
 
-SLACK_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+SLACK_ICON = """<svg viewBox="0 0 100 100" style="width: 1.5em; height: 1.5em;">
     <rect x="20" y="50" width="15" height="15" rx="4" fill="#36C5F0"/>
     <rect x="50" y="50" width="15" height="15" rx="4" fill="#2EB67D"/>
     <rect x="35" y="35" width="15" height="15" rx="4" fill="#ECB22E"/>
     <rect x="35" y="65" width="15" height="15" rx="4" fill="#E01E5A"/>
 </svg>"""
 
-# Updated TOOLS dictionary with custom SVG icons
+# New custom SDS icon
+SDS_ICON = """<svg viewBox="0 0 100 100" style="width: 1.5em; height: 1.5em;">
+    <rect x="20" y="10" width="60" height="80" rx="5" fill="#4CAF50"/>
+    <rect x="30" y="20" width="40" height="10" rx="2" fill="white"/>
+    <path d="M30 40h40v5h-40zM30 50h40v5h-40zM30 60h40v5h-40z" fill="white"/>
+    <path d="M35 70h15v15h-15z" fill="white"/>
+    <text x="38" y="82" font-size="12" fill="#4CAF50">SDS</text>
+</svg>"""
+
+# Updated TOOLS dictionary
 TOOLS = {
     "ClickUp": {
         "url": "https://app.clickup.com",
@@ -202,7 +211,7 @@ TOOLS = {
     "SDS Search": {
         "url": "https://chemicalsafety.com/sds-search/",
         "description": "Safety Data Sheet search database",
-        "icon": '<i class="fas fa-search-plus"></i>',
+        "icon": SDS_ICON,
         "color": "#4CAF50"
     },
     "Lab Inventory": {
@@ -451,20 +460,49 @@ st.markdown("""
         background-color: rgba(255, 255, 255, 0.9) !important;
         backdrop-filter: blur(10px);
     }
+    /* Icon container styling */
+    .tool-icon {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    
     /* SVG icon styling */
     .tool-icon svg {
-        width: 32px;
-        height: 32px;
-        margin-bottom: 0.5rem;
+        margin-right: 0.5rem;
         transition: transform 0.2s;
     }
     
     .external-tool-card:hover .tool-icon svg {
         transform: scale(1.1);
     }
+    
+    /* Card title alignment with icon */
+    .external-tool-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2C3E50;
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Description text sizing */
+    .external-tool-card p {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: #666;
+    }
+    
+    /* Adjust card height for consistent sizing */
+    .external-tool-card {
+        height: auto;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+    }
 </style>
 """, unsafe_allow_html=True)
-
 def verify_credentials(email, password):
     """Verify credentials and update tip if successful"""
     is_valid = email in AUTHORIZED_USERS and password == MASTER_PASSWORD
