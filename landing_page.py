@@ -11,7 +11,7 @@ REDIRECT_URI = st.secrets["REDIRECT_URI"]
 
 # Allowed email addresses
 ALLOWED_EMAILS = {
-    "user1@ketos.co",
+    "ermias@ketos.co",
     "user2@ketos.co",
     "user3@ketos.co"
     # Add more allowed email addresses here
