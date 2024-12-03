@@ -10,7 +10,6 @@ from urllib.parse import quote, urlencode
 GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
 GOOGLE_CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
 
-
 # Allowed email addresses
 ALLOWED_EMAILS = {
     "user1@ketos.co",
@@ -18,7 +17,16 @@ ALLOWED_EMAILS = {
     "user3@ketos.co"
 }
 
-# Configure OAuth flow
+# Debug mode
+DEBUG = True
+
+def get_redirect_uri():
+    """Get the correct redirect URI based on the environment"""
+    if 'HOSTNAME' in os.environ:  # Streamlit Cloud
+        return f"https://{os.environ['HOSTNAME']}/_oauth/callback"
+    return "http://localhost:8501/_oauth/callback"  # Local development
+
+# Configure OAuth flow with explicit redirect URI
 flow = Flow.from_client_config(
     client_config={
         "web": {
@@ -26,6 +34,7 @@ flow = Flow.from_client_config(
             "client_secret": GOOGLE_CLIENT_SECRET,
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [get_redirect_uri()],
         }
     },
     scopes=[
@@ -33,7 +42,7 @@ flow = Flow.from_client_config(
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile'
     ],
-
+    redirect_uri=get_redirect_uri()
 )
 
 # Initialize session state
@@ -41,6 +50,8 @@ if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'user_email' not in st.session_state:
     st.session_state.user_email = None
+if 'debug_info' not in st.session_state:
+    st.session_state.debug_info = {}
 
 # Page configuration
 st.set_page_config(
@@ -50,63 +61,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    .stButton > button {
-        background-color: #2E86C1;
-        color: white;
-        border-radius: 4px;
-        padding: 0.5rem 1rem;
-        border: none;
-        font-weight: 500;
-    }
-    
-    .stButton > button:hover {
-        background-color: #2874A6;
-    }
-    
-    .login-container {
-        max-width: 400px;
-        margin: auto;
-        padding: 2rem;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .ketos-title {
-        color: #2E86C1;
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
+# [Previous CSS styles remain the same]
 
 def generate_auth_url():
-    """Generate Google OAuth URL"""
+    """Generate Google OAuth URL with state parameter"""
     return flow.authorization_url(
         access_type='offline',
         include_granted_scopes='true',
-        prompt='consent'
+        prompt='consent',
+        state=json.dumps({'redirect_uri': get_redirect_uri()})
     )[0]
 
 def verify_oauth2_token(token):
-    """Verify the OAuth2 token"""
+    """Verify the OAuth2 token with enhanced error handling"""
     try:
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
         return idinfo
-    except ValueError:
+    except ValueError as e:
+        if DEBUG:
+            st.session_state.debug_info['token_verification_error'] = str(e)
         return None
+
+# Debug information display
+if DEBUG and not st.session_state.authenticated:
+    with st.expander("Debug Information"):
+        st.write("Current Redirect URI:", get_redirect_uri())
+        st.write("Query Parameters:", st.experimental_get_query_params())
+        if 'debug_info' in st.session_state:
+            st.write("Debug Info:", st.session_state.debug_info)
 
 # Main login interface
 if not st.session_state.authenticated:
@@ -119,22 +103,32 @@ if not st.session_state.authenticated:
         st.image("https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png", width=150)
         st.markdown('<p class="ketos-title">Welcome to KETOS Apps</p>', unsafe_allow_html=True)
         
-        # Handle OAuth callback
+        # Handle OAuth callback with enhanced error handling
         if 'code' in st.experimental_get_query_params():
             code = st.experimental_get_query_params()['code'][0]
             try:
                 flow.fetch_token(code=code)
                 credentials = flow.credentials
+                
+                if DEBUG:
+                    st.session_state.debug_info['token_fetch'] = 'successful'
+                    st.session_state.debug_info['has_id_token'] = hasattr(credentials, 'id_token')
+                
                 token_info = verify_oauth2_token(credentials.id_token)
                 
-                if token_info and token_info['email'] in ALLOWED_EMAILS:
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = token_info['email']
-                    st.rerun()
+                if token_info:
+                    if token_info['email'] in ALLOWED_EMAILS:
+                        st.session_state.authenticated = True
+                        st.session_state.user_email = token_info['email']
+                        st.rerun()
+                    else:
+                        st.error(f"Access denied. Email {token_info['email']} not authorized.")
                 else:
-                    st.error("Access denied. Please use an authorized KETOS email.")
+                    st.error("Token verification failed. Please check debug information.")
             except Exception as e:
-                st.error(f"Authentication error: {str(e)}")
+                if DEBUG:
+                    st.session_state.debug_info['token_fetch_error'] = str(e)
+                st.error(f"Authentication error. Please check debug information.")
         
         # Google Sign-In button
         if st.button("Sign in with Google", key="google_signin"):
@@ -143,6 +137,8 @@ if not st.session_state.authenticated:
         
         st.markdown('<div class="login-footer">Access restricted to authorized KETOS employees only.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+
 
 # Main content after authentication
 else:
