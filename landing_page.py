@@ -209,6 +209,13 @@ def get_new_tip():
 # Custom CSS
 st.markdown("""
 <style>
+    /* Base styles and fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
     /* Force background color */
     .stApp {
         background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
@@ -223,25 +230,113 @@ st.markdown("""
         background-color: transparent !important;
     }
     
+    /* Login form styling */
+    .login-container {
+        max-width: 400px;
+        margin: auto;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(46, 134, 193, 0.1);
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Page title styling */
+    .ketos-title {
+        background: linear-gradient(90deg, #2E86C1, #3498DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    /* Welcome message */
+    .welcome-message {
+        font-size: 18px;
+        color: #2C3E50;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background-color: #2E86C1 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        border: none !important;
+        font-weight: 500 !important;
+        width: 100% !important;
+        transition: transform 0.2s, background-color 0.2s !important;
+    }
+    
+    .stButton > button:hover {
+        background-color: #2874A6 !important;
+        transform: scale(1.02) !important;
+    }
+    
+    /* User info banner */
+    .user-info {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.95) !important;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(46, 134, 193, 0.1);
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Quick tip section */
+    .quick-tip {
+        background: rgba(232, 246, 255, 0.95) !important;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        border-left: 4px solid #3498DB;
+        backdrop-filter: blur(10px);
+    }
+    
+    .quick-tip h4 {
+        color: #2E86C1;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    /* Section titles */
+    .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        color: #2C3E50;
+        padding: 0.5rem 0.5rem 0.5rem 1rem;
+        border-left: 4px solid #2E86C1;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 4px;
+    }
+    
     /* Large cards for internal apps */
     .internal-app-card {
         padding: 2rem;
         border-radius: 12px;
         margin-bottom: 1.5rem;
         background: rgba(255, 255, 255, 0.95) !important;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.3s, box-shadow 0.3s;
         border: 1px solid rgba(46, 134, 193, 0.1);
         backdrop-filter: blur(10px);
         cursor: pointer;
-        height: 200px;
+        height: 250px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
     
     .internal-app-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(46, 134, 193, 0.15);
     }
     
     .internal-app-icon {
@@ -252,7 +347,7 @@ st.markdown("""
     .internal-app-title {
         font-size: 1.5rem;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1rem;
         color: #2C3E50;
     }
     
@@ -265,7 +360,7 @@ st.markdown("""
         transition: transform 0.2s, box-shadow 0.2s;
         border: 1px solid rgba(46, 134, 193, 0.1);
         cursor: pointer;
-        height: 120px;
+        height: 140px;
     }
     
     .external-tool-card:hover {
@@ -285,130 +380,44 @@ st.markdown("""
         color: #2C3E50;
     }
     
-    
-    /* Make cards stand out more against the background */
-    .app-card {
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.9) !important;
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid rgba(46, 134, 193, 0.1);
-        backdrop-filter: blur(10px);
-    }
-    
-    .app-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
-        background: rgba(255, 255, 255, 0.95) !important;
-    }
-    
-    /* Updated user info banner */
-    .user-info {
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.9) !important;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(46, 134, 193, 0.1);
-        border: 1px solid rgba(46, 134, 193, 0.1);
-        backdrop-filter: blur(10px);
-    }
-    
-    /* Quick tip section styling */
-    .quick-tip {
-        background: rgba(232, 246, 255, 0.9) !important;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-top: 1rem;
-        border-left: 4px solid #3498DB;
-        backdrop-filter: blur(10px);
-    }
-    
-    /* Section titles */
-    .section-title {
-        color: #2C3E50;
-        font-size: 24px;
-        font-weight: 600;
-        margin: 2rem 0 1rem 0;
-        padding-left: 0.5rem;
-        border-left: 4px solid #2E86C1;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 0.5rem;
-        border-radius: 4px;
-    }
-
-    .stButton > button {
-        background-color: #2E86C1;
-        color: white;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        border: none;
-        font-weight: 500;
-        width: 100%;
-        transition: transform 0.2s;
-    }
-    
-    .stButton > button:hover {
-        background-color: #2874A6;
-        transform: scale(1.02);
-    }
-    
-    .login-container {
-        max-width: 400px;
-        margin: auto;
-        padding: 2rem;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(46, 134, 193, 0.1);
-        border: 1px solid rgba(46, 134, 193, 0.1);
-        backdrop-filter: blur(10px);
-    }
-    
-    .ketos-title {
-        background: linear-gradient(90deg, #2E86C1, #3498DB);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        text-align: center;
-    }
-    
-    /* Style adjustments for better contrast */
-    .card-title {
-        color: #2E86C1;
-        font-weight: 600;
-    }
-    
-    .card-description {
-        color: #2C3E50;
-    }
-    .clickable-card {
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.9) !important;
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid rgba(46, 134, 193, 0.1);
-        backdrop-filter: blur(10px);
-        cursor: pointer;
-    }
-    
-    .clickable-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
-        background: rgba(255, 255, 255, 0.95) !important;
-    }
-
-    /* Add link styling */
+    /* Card links */
     .card-link {
-        text-decoration: none;
-        color: inherit;
+        text-decoration: none !important;
+        color: inherit !important;
     }
     
     .card-link:hover {
-        text-decoration: none;
-        color: inherit;
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+    
+    /* Help text */
+    .help-text {
+        color: #666;
+        font-size: 14px;
+        margin-top: 0.5rem;
+        text-align: center;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding: 1rem;
+        color: #666;
+        font-size: 0.875rem;
+    }
+    
+    /* Error messages */
+    .stAlert {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(10px);
     }
 </style>
 """, unsafe_allow_html=True)
