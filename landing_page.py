@@ -16,9 +16,10 @@ COMPANY_LOGO = "https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png
 
 # User credentials with simple password
 AUTHORIZED_USERS = {
-    "user1@ketos.co": {"name": "User One"},
-    "user2@ketos.co": {"name": "User Two"},
-    "user3@ketos.co": {"name": "User Three"}
+    "ermias@ketos.co": {"name": "Ermias"},
+    "fiseha@ketos.co": {"name": "Fiseha"},
+    "girma.seifu@ketos.co": {"name": "Girma"},
+    "shengcun.ma@ketos.co": {"name": "Shengcun"}
 }
 
 MASTER_PASSWORD = "18221822"
@@ -85,7 +86,14 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
+    /* KETOS themed background */
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%);
+    }
+    
+    /* Add KETOS blue accents */
     .stButton > button {
+        background-color: #2E86C1;
         color: white;
         border-radius: 8px;
         padding: 0.5rem 1rem;
@@ -96,6 +104,7 @@ st.markdown("""
     }
     
     .stButton > button:hover {
+        background-color: #2874A6;
         transform: scale(1.02);
     }
     
@@ -103,9 +112,10 @@ st.markdown("""
         max-width: 400px;
         margin: auto;
         padding: 2rem;
-        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        background: rgba(255, 255, 255, 0.95);
         border-radius: 16px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 32px rgba(46, 134, 193, 0.1);
+        border: 1px solid rgba(46, 134, 193, 0.1);
     }
     
     .ketos-title {
@@ -117,7 +127,6 @@ st.markdown("""
         margin-bottom: 1rem;
         text-align: center;
     }
-    
     .welcome-message {
         font-size: 18px;
         color: #2C3E50;
@@ -232,11 +241,13 @@ def render_login_form():
                     else:
                         st.error("❌ Invalid email or password")
 
+
 def render_dashboard():
-    # Header with user info and logout
+    # Header with user name and logout
+    user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
     st.markdown(f"""
         <div class="user-info">
-            <span>👋 Welcome back, <strong>{st.session_state.user_email}</strong>!</span>
+            <span>👋 Welcome back, <strong>{user_name}</strong>!</span>
         </div>
     """, unsafe_allow_html=True)
     
