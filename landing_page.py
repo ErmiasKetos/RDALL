@@ -191,6 +191,15 @@ if 'login_attempts' not in st.session_state:
 if 'lockout_until' not in st.session_state:
     st.session_state.lockout_until = None
 
+# Add tip management functions
+def get_daily_tip():
+    """Get a tip that changes daily"""
+    today = datetime.now().date()
+    if st.session_state.last_tip_date != today:
+        st.session_state.current_tip = random.choice(QUICK_TIPS)
+        st.session_state.last_tip_date = today
+    return st.session_state.current_tip
+
 # Custom CSS
 st.markdown("""
 <style>
