@@ -545,7 +545,7 @@ def render_login_form():
             email = st.text_input("📧 Email", placeholder="your.email@ketos.co")
             password = st.text_input("🔑 Password", type="password")
             
-            st.markdown('<div class="help-text">Need help? Contact IT Support</div>', unsafe_allow_html=True)
+            st.markdown('<div class="help-text">Need help? Contact R&D Support</div>', unsafe_allow_html=True)
             
             if st.form_submit_button("Sign In", use_container_width=True):
                 if verify_credentials(email, password):
