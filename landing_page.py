@@ -86,12 +86,71 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* KETOS themed background */
+    /* KETOS themed background - fixed version */
     .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
     }
     
-    /* Add KETOS blue accents */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
+    }
+    
+    .main {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
+    }
+    
+    /* Make cards stand out more against the background */
+    .app-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.9) !important;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .app-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+    
+    /* Updated user info banner */
+    .user-info {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(46, 134, 193, 0.1);
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Quick tip section styling */
+    .quick-tip {
+        background: rgba(232, 246, 255, 0.9) !important;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border-left: 4px solid #3498DB;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Section titles */
+    .section-title {
+        color: #2C3E50;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        padding-left: 0.5rem;
+        border-left: 4px solid #2E86C1;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
+    
+    /* Other styling remains the same */
     .stButton > button {
         background-color: #2E86C1;
         color: white;
@@ -116,6 +175,7 @@ st.markdown("""
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(46, 134, 193, 0.1);
         border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
     }
     
     .ketos-title {
@@ -127,69 +187,15 @@ st.markdown("""
         margin-bottom: 1rem;
         text-align: center;
     }
-    .welcome-message {
-        font-size: 18px;
-        color: #2C3E50;
-        text-align: center;
-        margin-bottom: 1.5rem;
-        line-height: 1.6;
-    }
     
-    .app-card {
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-        background: white;
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid #e0e0e0;
-    }
-    
-    .app-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-    }
-    
-    .user-info {
-        padding: 1rem;
-        background: linear-gradient(145deg, #f8f9fa, #ffffff);
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    
-    .section-title {
-        font-size: 24px;
-        font-weight: 600;
-        margin: 2rem 0 1rem 0;
-        color: #2C3E50;
-        padding-left: 0.5rem;
-        border-left: 4px solid #2E86C1;
-    }
-    
-    .card-icon {
-        font-size: 24px;
-        margin-bottom: 0.5rem;
-    }
-    
+    /* Style adjustments for better contrast */
     .card-title {
-        font-size: 18px;
+        color: #2E86C1;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+    }
+    
+    .card-description {
         color: #2C3E50;
-    }
-    
-    .quick-tip {
-        background: #E8F6FF;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-top: 1rem;
-        border-left: 4px solid #3498DB;
-    }
-    
-    .help-text {
-        color: #666;
-        font-size: 14px;
-        margin-top: 0.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
