@@ -2,73 +2,76 @@ import streamlit as st
 from streamlit_lottie import st_lottie
 import requests
 import re
+import hmac
+import hashlib
 
-def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
+# Initialize session state for authentication
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if hmac.compare_digest(st.session_state["password"], st.session_state["password_correct"]):
+            st.session_state.authenticated = True
+            del st.session_state["password"]  # Don't store password
+            del st.session_state["password_correct"]
+            return True
+        else:
+            st.session_state.authenticated = False
+            st.error("😕 Password incorrect")
+            return False
+
+    if "authenticated" not in st.session_state:
+        # First run, show input for password
+        st.text_input(
+            "Password", type="password", key="password",
+            on_change=password_entered)
+        return False
+    elif not st.session_state.authenticated:
+        # Password not correct, show input + error
+        st.text_input(
+            "Password", type="password", key="password",
+            on_change=password_entered)
+        return False
+    else:
+        # Password correct
+        return True
 
 def is_valid_ketos_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@ketos\.com$'
+    """Validate if email is a ketos.co domain"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@ketos\.co$'
     return re.match(pattern, email) is not None
 
 # Page configuration
-st.set_page_config(page_title="KETOS Streamlit Apps", page_icon="🧪", layout="wide")
+st.set_page_config(
+    page_title="KETOS Apps Login",
+    page_icon="🌊",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# Custom CSS
+# Custom CSS to match KETOS branding
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Roboto', sans-serif;
+        font-family: 'Inter', sans-serif;
     }
     
-    .main {
-        background-color: #f0f8ff;
-        padding: 2rem;
-    }
-    
-    h1, h2, h3 {
-        color: #2E86C1;
-    }
-    
-    .stButton>button {
-        width: 100%;
-        height: 60px;
-        font-size: 18px;
-        font-weight: bold;
-        border-radius: 10px;
-        border: none;
-        color: #ffffff;
+    .stButton > button {
         background-color: #2E86C1;
-        transition: all 0.3s ease;
+        color: white;
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        border: none;
+        font-weight: 500;
     }
     
-    .stButton>button:hover {
+    .stButton > button:hover {
         background-color: #2874A6;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .app-description {
-        margin-top: 10px;
-        font-size: 16px;
-        color: #666;
-    }
-    
-    .stSubheader {
-        font-size: 24px;
-        color: #2E86C1;
-        margin-top: 2rem;
-    }
-    
-    .hero-section {
-        background-color: #e8f4fd;
-        padding: 2rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     
     .login-container {
@@ -76,109 +79,94 @@ st.markdown("""
         margin: auto;
         padding: 2rem;
         background-color: white;
-        border-radius: 10px;
+        border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .ketos-title {
+        color: #2E86C1;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .stTextInput > div > div > input {
+        border-radius: 4px;
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .login-footer {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-top: 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-
-def login():
-    st.session_state.logged_in = True
-
-def logout():
-    st.session_state.logged_in = False
-
-# Login Form
-if not st.session_state.logged_in:
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
-    st.title("Welcome to KETOS Apps")
-    email = st.text_input("Enter your KETOS email")
-    if st.button("Login"):
-        if is_valid_ketos_email(email):
-            login()
-        else:
-            st.error("Please enter a valid KETOS email address.")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Main Content (only shown when logged in)
-if st.session_state.logged_in:
-    # Header
-    st.markdown('<div class="hero-section">', unsafe_allow_html=True)
-    st.title("KETOS Streamlit Apps Suite")
-    st.write("Explore our powerful tools designed to streamline your workflow.")
-
-    # Lottie Animation
-    lottie_url = "https://assets5.lottiefiles.com/packages/lf20_V9t630.json"
-    lottie_json = load_lottieurl(lottie_url)
-    st_lottie(lottie_json, height=200, key="lottie")
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # App buttons
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.link_button("Launch WBCal", "https://caldash-eoewkytd6u7jyxfm2haaxn.streamlit.app", use_container_width=True)
-        st.markdown('<p class="app-description">Advanced probe calibration and management tool</p>', unsafe_allow_html=True)
-
+# Main login interface
+if not st.session_state.authenticated:
+    col1, col2, col3 = st.columns([1,2,1])
+    
     with col2:
-        st.link_button("Launch KCF LIMS", "https://4ekgis64qetw42fdkrynsn.streamlit.app", use_container_width=True)
-        st.markdown('<p class="app-description">Comprehensive Laboratory Information Management System</p>', unsafe_allow_html=True)
+        st.markdown('<div class="login-container">', unsafe_allow_html=True)
+        
+        # KETOS logo and title
+        st.image("https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png", width=150)
+        st.markdown('<p class="ketos-title">Welcome to KETOS Apps</p>', unsafe_allow_html=True)
+        
+        # Login form
+        email = st.text_input("Email", placeholder="Enter your KETOS email")
+        st.session_state["password_correct"] = "your_secure_password"  # In production, use proper authentication
+        
+        if st.button("Login"):
+            if is_valid_ketos_email(email):
+                if check_password():
+                    st.session_state.authenticated = True
+                    st.rerun()
+            else:
+                st.error("Please enter a valid KETOS email address (@ketos.co)")
+        
+        st.markdown('<div class="login-footer">Access restricted to KETOS employees only.</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    with col3:
-        st.link_button("Launch PO Request", "https://ntsmv7uynenkazkeftozjx.streamlit.app", use_container_width=True)
-        st.markdown('<p class="app-description">Efficient Purchase Order Request management</p>', unsafe_allow_html=True)
-
-    # Additional information section
-    st.subheader("About Our Apps")
-
-    with st.expander("WBCal - Probe Calibration and Management"):
-        st.write("""
-        WBCal is our state-of-the-art probe calibration and management tool. It offers:
-        - Precise calibration tracking
-        - Automated reminder system for recalibration
-        - Comprehensive calibration history
-        - Data visualization for calibration trends
-        """)
-
-    with st.expander("KCF LIMS - Laboratory Information Management System"):
-        st.write("""
-        KCF LIMS streamlines your laboratory operations with features like:
-        - Sample tracking and management
-        - Instrument integration and monitoring
-        - Customizable workflows and reporting
-        - Quality control and assurance tools
-        """)
-
-    with st.expander("PO Request - Purchase Order Management"):
-        st.write("""
-        Simplify your purchase order process with our PO Request app:
-        - Easy-to-use request forms
-        - Approval workflow automation
-        - Budget tracking and reporting
-        - Vendor management and performance analytics
-        """)
-
-    # User guide
-    st.subheader("How to Use")
-    st.info("""
-    1. Click on the app button you want to launch.
-    2. The selected app will open in a new browser tab.
-    3. You can always return to this page to access other apps.
-    """)
-
-    # Footer
-    st.markdown("---")
+else:
+    # Main content after authentication
+    st.title("KETOS Internal Applications")
+    
+    # App navigation
     col1, col2, col3 = st.columns(3)
+    
     with col1:
-        st.markdown("© 2023 KETOS. All rights reserved.")
+        st.link_button(
+            "Launch WBCal",
+            "https://caldash-eoewkytd6u7jyxfm2haaxn.streamlit.app",
+            use_container_width=True
+        )
+        st.markdown("Probe calibration and management system")
+        
     with col2:
-        st.markdown("For support, contact: support@ketos.com")
+        st.link_button(
+            "Launch KCF LIMS",
+            "https://4ekgis64qetw42fdkrynsn.streamlit.app",
+            use_container_width=True
+        )
+        st.markdown("Laboratory Information Management System")
+        
     with col3:
-        if st.button("Logout"):
-            logout()
+        st.link_button(
+            "Launch PO Request",
+            "https://ntsmv7uynenkazkeftozjx.streamlit.app",
+            use_container_width=True
+        )
+        st.markdown("Purchase Order Request System")
+    
+    # Logout option
+    if st.button("Logout", key="logout"):
+        st.session_state.authenticated = False
+        st.rerun()
 
