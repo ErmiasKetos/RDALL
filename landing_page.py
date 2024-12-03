@@ -1,6 +1,14 @@
 import streamlit as st
 from datetime import datetime, timedelta
 
+# Must be the first Streamlit command
+st.set_page_config(
+    page_title="KETOS Internal Portal",
+    page_icon="🌊",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
 # Configuration
 APP_TITLE = "KETOS Internal Portal"
 APP_ICON = "🌊"
@@ -58,7 +66,17 @@ TOOLS = {
     }
 }
 
-# Custom CSS with more vibrant design
+# Initialize session state
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = None
+if 'login_attempts' not in st.session_state:
+    st.session_state.login_attempts = 0
+if 'lockout_until' not in st.session_state:
+    st.session_state.lockout_until = None
+
+# Custom CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -166,24 +184,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-# Initialize session state
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
-if 'user_email' not in st.session_state:
-    st.session_state.user_email = None
-if 'login_attempts' not in st.session_state:
-    st.session_state.login_attempts = 0
-if 'lockout_until' not in st.session_state:
-    st.session_state.lockout_until = None
-
-# Page configuration
-st.set_page_config(
-    page_title=APP_TITLE,
-    page_icon=APP_ICON,
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
 
 def verify_credentials(email, password):
     return email in AUTHORIZED_USERS and password == MASTER_PASSWORD
