@@ -3,12 +3,38 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import os
-import pathlib
-import requests as http_requests
 
 # Google OAuth credentials
-CLIENT_SECRETS_FILE = "client_secret.json"
-SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
+GOOGLE_CLIENT_ID = os.getenv('714525819545-ndq1ndid320qkh06lsrv4mt5hc7kvbeg.apps.googleusercontent.com')
+GOOGLE_CLIENT_SECRET = os.getenv('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T')
+REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://2kdjdf2ktdyukylfaxdtbf.streamlit.app/')
+
+# Allowed email addresses
+ALLOWED_EMAILS = {
+    "user1@ketos.co",
+    "user2@ketos.co",
+    "user3@ketos.co"
+    # Add more allowed email addresses here
+}
+
+# Check if credentials are set
+if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+    st.error("Google OAuth credentials are not set. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.")
+    st.stop()
+
+# Create a Flow object
+flow = Flow.from_client_config(
+    client_config={
+        "web": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+        }
+    },
+    scopes=['https://www.googleapis.com/auth/userinfo.email', 'openid'],
+    redirect_uri=REDIRECT_URI
+)
 
 # Initialize session state
 if 'authenticated' not in st.session_state:
@@ -95,24 +121,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def is_valid_ketos_email(email):
-    """Validate if email is a ketos.co domain"""
-    return email.lower().endswith('@ketos.co')
-
-def initialize_google_auth():
-    """Initialize Google OAuth flow"""
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
-        redirect_uri='http://localhost:8501/callback'
-    )
-    return flow
+def is_allowed_email(email):
+    """Validate if email is in the allowed list"""
+    return email.lower() in ALLOWED_EMAILS
 
 def verify_google_token(token):
     """Verify Google OAuth token and extract user information"""
     try:
-        idinfo = id_token.verify_oauth2_token(
-            token, requests.Request(), os.getenv('GOOGLE_CLIENT_ID'))
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
         return idinfo['email']
     except ValueError:
         return None
@@ -130,32 +146,26 @@ if not st.session_state.authenticated:
         
         # Google Sign-In button
         if st.button("Sign in with Google", key="google_signin"):
-            try:
-                flow = initialize_google_auth()
-                authorization_url, state = flow.authorization_url()
-                st.session_state.oauth_state = state
-                st.markdown(f'<meta http-equiv="refresh" content="0;url={authorization_url}">', unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"Authentication error: {str(e)}")
+            authorization_url, _ = flow.authorization_url(prompt='consent')
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={authorization_url}">', unsafe_allow_html=True)
         
-        st.markdown('<div class="login-footer">Access restricted to KETOS employees only.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-footer">Access restricted to authorized KETOS employees only.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 # Callback handler
 elif 'code' in st.experimental_get_query_params():
     code = st.experimental_get_query_params()['code'][0]
-    flow = initialize_google_auth()
     flow.fetch_token(code=code)
     
     credentials = flow.credentials
     email = verify_google_token(credentials.id_token)
     
-    if email and is_valid_ketos_email(email):
+    if email and is_allowed_email(email):
         st.session_state.authenticated = True
         st.session_state.user_email = email
         st.rerun()
     else:
-        st.error("Please sign in with your KETOS email (@ketos.co)")
+        st.error("Access denied. Please contact your administrator if you believe this is an error.")
         st.session_state.authenticated = False
         if st.button("Try Again"):
             st.rerun()
