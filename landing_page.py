@@ -17,7 +17,6 @@ COMPANY_LOGO = "https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png
 
 # Add QUICK_TIPS configuration here
 QUICK_TIPS = [
-    # Existing general tips
     {
         "icon": "⚡",
         "title": "ClickUp Shortcut",
@@ -33,8 +32,7 @@ QUICK_TIPS = [
         "title": "Lab Inventory Management",
         "tip": "Always update Quartzy immediately after using or receiving materials to maintain accurate inventory."
     },
-    
-    # New R&D specific tips
+
     {
         "icon": "📝",
         "title": "Data Recording",
@@ -211,24 +209,82 @@ def get_new_tip():
 # Custom CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    /* KETOS themed background - fixed version */
+    /* Force background color */
     .stApp {
         background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
     }
     
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
+    /* Override Streamlit's default background */
+    .main {
+        background-color: transparent !important;
     }
     
-    .main {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%) !important;
+    section[data-testid="stSidebar"] {
+        background-color: transparent !important;
     }
+    
+    /* Large cards for internal apps */
+    .internal-app-card {
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        background: rgba(255, 255, 255, 0.95) !important;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .internal-app-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
+    }
+    
+    .internal-app-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .internal-app-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2C3E50;
+    }
+    
+    /* Smaller cards for external tools */
+    .external-tool-card {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.9) !important;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        cursor: pointer;
+        height: 120px;
+    }
+    
+    .external-tool-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(46, 134, 193, 0.1);
+    }
+    
+    .external-tool-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .external-tool-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #2C3E50;
+    }
+    
     
     /* Make cards stand out more against the background */
     .app-card {
@@ -280,8 +336,7 @@ st.markdown("""
         padding: 0.5rem;
         border-radius: 4px;
     }
-    
-    /* Other styling remains the same */
+
     .stButton > button {
         background-color: #2E86C1;
         color: white;
@@ -417,11 +472,14 @@ def render_login_form():
                     else:
                         st.error("❌ Invalid email or password")
 
+
 def render_dashboard():
     # First check if we need to update the daily tip
     check_and_update_daily_tip()
     
     user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
+    
+    # Header with user info and logout
     st.markdown(f"""
         <div class="user-info">
             <span>👋 Welcome back, <strong>{user_name}</strong>!</span>
@@ -433,7 +491,6 @@ def render_dashboard():
         if st.button("🚪 Logout", key="logout", type="primary"):
             st.session_state.authenticated = False
             st.session_state.user_email = None
-            # Don't reset the tip here, it will update on next login
             st.rerun()
 
     # Display the current tip
@@ -445,42 +502,44 @@ def render_dashboard():
         </div>
     """, unsafe_allow_html=True)
 
-    # Internal Apps Section
+    # Internal Apps Section - Larger cards
     st.markdown('<h2 class="section-title">Internal Applications</h2>', unsafe_allow_html=True)
     cols_apps = st.columns(len(INTERNAL_APPS))
     for col, (app_name, app_info) in zip(cols_apps, INTERNAL_APPS.items()):
         with col:
             st.markdown(f"""
                 <a href="{app_info['url']}" target="_blank" class="card-link">
-                    <div class="clickable-card" style="border-top: 4px solid {app_info['color']}">
-                        <div class="card-icon">{app_info['icon']}</div>
-                        <div class="card-title">{app_name}</div>
-                        <p>{app_info['description']}</p>
+                    <div class="internal-app-card" style="border-top: 4px solid {app_info['color']}">
+                        <div>
+                            <div class="internal-app-icon">{app_info['icon']}</div>
+                            <div class="internal-app-title">{app_name}</div>
+                            <p>{app_info['description']}</p>
+                        </div>
                     </div>
                 </a>
             """, unsafe_allow_html=True)
 
-    # External Tools Section
+    # External Tools Section - Smaller cards in a grid
     st.markdown('<h2 class="section-title">Quick Access Tools</h2>', unsafe_allow_html=True)
     
-    # Calculate number of columns needed (3 cards per row)
+    # Calculate number of columns (4 tools per row)
     num_tools = len(TOOLS)
-    num_rows = (num_tools + 2) // 3  # Round up division
+    num_rows = (num_tools + 3) // 4  # Round up division
     
     # Create tools grid
     for row in range(num_rows):
-        cols = st.columns(3)
-        for col_idx in range(3):
-            tool_idx = row * 3 + col_idx
+        cols = st.columns(4)
+        for col_idx in range(4):
+            tool_idx = row * 4 + col_idx
             if tool_idx < num_tools:
                 tool_name = list(TOOLS.keys())[tool_idx]
                 tool_info = TOOLS[tool_name]
                 with cols[col_idx]:
                     st.markdown(f"""
                         <a href="{tool_info['url']}" target="_blank" class="card-link">
-                            <div class="clickable-card" style="border-top: 4px solid {tool_info['color']}">
-                                <div class="card-icon">{tool_info['icon']}</div>
-                                <div class="card-title">{tool_name}</div>
+                            <div class="external-tool-card" style="border-top: 4px solid {tool_info['color']}">
+                                <div class="external-tool-icon">{tool_info['icon']}</div>
+                                <div class="external-tool-title">{tool_name}</div>
                                 <p>{tool_info['description']}</p>
                             </div>
                         </a>
@@ -492,7 +551,7 @@ def render_dashboard():
             ### Getting Started
             1. **Internal Apps**: Access KETOS-specific applications
                 - WBCal: Manage probe calibrations
-                - KCF LIMS: KCTray Management
+                - KCF LIMS: Laboratory data management
                 - PO Request: Submit purchase orders
             
             2. **Quick Access Tools**:
@@ -500,18 +559,19 @@ def render_dashboard():
                 - Slack: Team communication
                 - Google Drive: Document storage
                 - SDS Search: Safety Data Sheet database
-                - Lab Inventory: R&D Lab Chemical inventory management
+                - Lab Inventory: Quartzy inventory management
             
             ### Need Help?
-            - For technical issues: Contact R&D Support
+            - For technical issues: Contact IT Support
             - For app-specific questions: Reach out to the respective team leads
-            - For access requests: Submit through R&D Ops support ticket
+            - For access requests: Submit through IT support ticket
             
             ### Quick Tips
             - Click directly on any card to open the respective application
             - Keep your password secure and don't share it
             - Log out when you're done for security
         """)
+    
 
 # Main app logic
 if not st.session_state.authenticated:
