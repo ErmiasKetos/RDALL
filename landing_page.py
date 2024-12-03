@@ -9,7 +9,7 @@ from urllib.parse import quote, urlencode
 # Google OAuth credentials
 GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
 GOOGLE_CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
-REDIRECT_URI = st.secrets["REDIRECT_URI"]
+
 
 # Allowed email addresses
 ALLOWED_EMAILS = {
