@@ -151,7 +151,7 @@ TOOLS = {
     "ClickUp": {
         "url": "https://app.clickup.com",
         "description": "Project and task management platform",
-        "icon": "✅",
+         "icon": '<i class="fa-regular fa-circle-check"></i>',
         "color": "#7B68EE"
     },
     "Slack": {
