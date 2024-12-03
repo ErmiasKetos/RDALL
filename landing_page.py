@@ -40,13 +40,6 @@ st.set_page_config(
 )
 
 # Custom CSS
-st.set_page_config(
-    page_title=APP_TITLE,
-    page_icon=APP_ICON,
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -106,32 +99,8 @@ st.markdown("""
         border-radius: 4px;
         margin-bottom: 1rem;
     }
-    
-    .logout-button {
-        float: right;
-    }
-    
-    .form-container {
-        margin-top: 1rem;
-    }
-    
-    .centered-text {
-        text-align: center;
-    }
 </style>
 """, unsafe_allow_html=True)
-
-def hash_password(password):
-    """Hash a password using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def verify_credentials(email, password):
-    """Verify user credentials"""
-    if email not in AUTHORIZED_USERS:
-        return False
-    
-    hashed_password = hash_password(password)
-    return AUTHORIZED_USERS[email]["password"] == hashed_password
 
 # Initialize session state
 if 'authenticated' not in st.session_state:
@@ -142,6 +111,10 @@ if 'login_attempts' not in st.session_state:
     st.session_state.login_attempts = 0
 if 'lockout_until' not in st.session_state:
     st.session_state.lockout_until = None
+
+def verify_credentials(email, password):
+    """Verify user credentials"""
+    return email in AUTHORIZED_USERS and password == MASTER_PASSWORD
 
 def render_login_form():
     col1, col2, col3 = st.columns([1,2,1])
