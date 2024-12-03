@@ -211,7 +211,6 @@ def render_login_form():
         st.markdown("""
             <p class="welcome-message">
                 Welcome to the KETOS Internal Portal! 🌊<br>
-                Your gateway to all KETOS tools and resources.
             </p>
         """, unsafe_allow_html=True)
         
@@ -309,7 +308,7 @@ def render_dashboard():
             ### Getting Started
             1. **Internal Apps**: Access KETOS-specific applications
                 - WBCal: Manage probe calibrations
-                - KCF LIMS: Laboratory data management
+                - KCF LIMS: KCTray management
                 - PO Request: Submit purchase orders
             
             2. **Quick Access Tools**:
@@ -320,7 +319,7 @@ def render_dashboard():
             ### Need Help?
             - For technical issues: Contact IT Support
             - For app-specific questions: Reach out to the respective team leads
-            - For access requests: Submit through IT support ticket
+            - For access requests: Submit through R&D Ops ticket
             
             ### Quick Tips
             - Bookmark this portal for easy access
