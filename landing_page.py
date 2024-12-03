@@ -34,7 +34,7 @@ INTERNAL_APPS = {
     },
     "KCF LIMS": {
         "url": "https://4ekgis64qetw42fdkrynsn.streamlit.app",
-        "description": "Laboratory Information Management System",
+        "description": "KCTray Management",
         "icon": "🧪",
         "color": "#27AE60"
     },
@@ -64,6 +64,18 @@ TOOLS = {
         "description": "Document storage and collaboration",
         "icon": "📁",
         "color": "#FF9800"
+    },
+    "SDS Search": {
+        "url": "https://chemicalsafety.com/sds-search/",
+        "description": "Safety Data Sheet search database",
+        "icon": "🔍",
+        "color": "#4CAF50"
+    },
+    "Lab Inventory": {
+        "url": "https://app.quartzy.com",
+        "description": "Laboratory inventory management system",
+        "icon": "📦",
+        "color": "#009688"
     }
 }
 
@@ -197,6 +209,33 @@ st.markdown("""
     .card-description {
         color: #2C3E50;
     }
+    .clickable-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.9) !important;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(46, 134, 193, 0.1);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+    }
+    
+    .clickable-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* Add link styling */
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .card-link:hover {
+        text-decoration: none;
+        color: inherit;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -248,7 +287,6 @@ def render_login_form():
 
 
 def render_dashboard():
-    # Header with user name and logout
     user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
     st.markdown(f"""
         <div class="user-info">
@@ -278,35 +316,40 @@ def render_dashboard():
     for col, (app_name, app_info) in zip(cols_apps, INTERNAL_APPS.items()):
         with col:
             st.markdown(f"""
-                <div class="app-card" style="border-top: 4px solid {app_info['color']}">
-                    <div class="card-icon">{app_info['icon']}</div>
-                    <div class="card-title">{app_name}</div>
-                    <p>{app_info['description']}</p>
-                </div>
+                <a href="{app_info['url']}" target="_blank" class="card-link">
+                    <div class="clickable-card" style="border-top: 4px solid {app_info['color']}">
+                        <div class="card-icon">{app_info['icon']}</div>
+                        <div class="card-title">{app_name}</div>
+                        <p>{app_info['description']}</p>
+                    </div>
+                </a>
             """, unsafe_allow_html=True)
-            st.link_button(
-                f"Launch {app_name}",
-                app_info['url'],
-                use_container_width=True,
-            )
 
     # External Tools Section
     st.markdown('<h2 class="section-title">Quick Access Tools</h2>', unsafe_allow_html=True)
-    cols_tools = st.columns(len(TOOLS))
-    for col, (tool_name, tool_info) in zip(cols_tools, TOOLS.items()):
-        with col:
-            st.markdown(f"""
-                <div class="app-card" style="border-top: 4px solid {tool_info['color']}">
-                    <div class="card-icon">{tool_info['icon']}</div>
-                    <div class="card-title">{tool_name}</div>
-                    <p>{tool_info['description']}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            st.link_button(
-                f"Open {tool_name}",
-                tool_info['url'],
-                use_container_width=True,
-            )
+    
+    # Calculate number of columns needed (3 cards per row)
+    num_tools = len(TOOLS)
+    num_rows = (num_tools + 2) // 3  # Round up division
+    
+    # Create tools grid
+    for row in range(num_rows):
+        cols = st.columns(3)
+        for col_idx in range(3):
+            tool_idx = row * 3 + col_idx
+            if tool_idx < num_tools:
+                tool_name = list(TOOLS.keys())[tool_idx]
+                tool_info = TOOLS[tool_name]
+                with cols[col_idx]:
+                    st.markdown(f"""
+                        <a href="{tool_info['url']}" target="_blank" class="card-link">
+                            <div class="clickable-card" style="border-top: 4px solid {tool_info['color']}">
+                                <div class="card-icon">{tool_info['icon']}</div>
+                                <div class="card-title">{tool_name}</div>
+                                <p>{tool_info['description']}</p>
+                            </div>
+                        </a>
+                    """, unsafe_allow_html=True)
 
     # Instructions and Help Section
     with st.expander("📚 Instructions & Help"):
@@ -314,21 +357,23 @@ def render_dashboard():
             ### Getting Started
             1. **Internal Apps**: Access KETOS-specific applications
                 - WBCal: Manage probe calibrations
-                - KCF LIMS: KCTray management
+                - KCF LIMS: KCTray Management
                 - PO Request: Submit purchase orders
             
             2. **Quick Access Tools**:
                 - ClickUp: Task and project management
                 - Slack: Team communication
                 - Google Drive: Document storage
+                - SDS Search: Safety Data Sheet database
+                - Lab Inventory: R&D Lab Chemical inventory management
             
             ### Need Help?
-            - For technical issues: Contact IT Support
+            - For technical issues: Contact R&D Support
             - For app-specific questions: Reach out to the respective team leads
-            - For access requests: Submit through R&D Ops ticket
+            - For access requests: Submit through R&D Ops support ticket
             
             ### Quick Tips
-            - Bookmark this portal for easy access
+            - Click directly on any card to open the respective application
             - Keep your password secure and don't share it
             - Log out when you're done for security
         """)
