@@ -147,39 +147,71 @@ INTERNAL_APPS = {
     }
 }
 
+# Custom SVG icons as strings
+CLICKUP_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+    <path d="M50 25 L75 40 L75 60 L50 75 L25 60 L25 40 Z" fill="url(#clickup-gradient)" />
+    <defs>
+        <linearGradient id="clickup-gradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stop-color="#FF6B8B"/>
+            <stop offset="50%" stop-color="#FF8E3C"/>
+            <stop offset="100%" stop-color="#40A9FF"/>
+        </linearGradient>
+    </defs>
+</svg>"""
+
+GDRIVE_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+    <path d="M6.4 87.5l8.3-14.1h71l-8.3 14.1z" fill="#3777E3"/>
+    <path d="M49.8 25.3l-20.2 34.9 20.2 34.9 20.2-34.9z" fill="#FFCF63"/>
+    <path d="M6.4 87.5l20.2-34.9 20.2-34.9h-20.2l-20.2 34.9z" fill="#11A861"/>
+    <path d="M93.6 87.5l-20.2-34.9-20.2-34.9h20.2l20.2 34.9z" fill="#E53F35"/>
+</svg>"""
+
+QUARTZY_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+    <circle cx="50" cy="50" r="45" fill="#FF6B42"/>
+    <path d="M35 30h30v25c0 15-15 15-15 15s-15 0-15-15V30z" fill="white"/>
+    <circle cx="50" cy="45" r="5" fill="#FF6B42"/>
+</svg>"""
+
+SLACK_ICON = """<svg viewBox="0 0 100 100" style="width: 24px; height: 24px;">
+    <rect x="20" y="50" width="15" height="15" rx="4" fill="#36C5F0"/>
+    <rect x="50" y="50" width="15" height="15" rx="4" fill="#2EB67D"/>
+    <rect x="35" y="35" width="15" height="15" rx="4" fill="#ECB22E"/>
+    <rect x="35" y="65" width="15" height="15" rx="4" fill="#E01E5A"/>
+</svg>"""
+
+# Updated TOOLS dictionary with custom SVG icons
 TOOLS = {
     "ClickUp": {
         "url": "https://app.clickup.com",
         "description": "Project and task management platform",
-         "icon": '<i class="fa-regular fa-circle-check"></i>',
+        "icon": CLICKUP_ICON,
         "color": "#7B68EE"
     },
     "Slack": {
         "url": "https://ketos.slack.com",
         "description": "Team communication platform",
-        "icon": "💬",
-        "color": "#E91E63"
+        "icon": SLACK_ICON,
+        "color": "#E01E5A"
     },
     "Google Drive": {
         "url": "https://drive.google.com",
         "description": "Document storage and collaboration",
-        "icon": "📁",
-        "color": "#FF9800"
+        "icon": GDRIVE_ICON,
+        "color": "#0F9D58"
     },
     "SDS Search": {
         "url": "https://chemicalsafety.com/sds-search/",
         "description": "Safety Data Sheet search database",
-        "icon": "🔍",
+        "icon": '<i class="fas fa-search-plus"></i>',
         "color": "#4CAF50"
     },
     "Lab Inventory": {
         "url": "https://app.quartzy.com",
         "description": "Laboratory inventory management system",
-        "icon": "📦",
-        "color": "#009688"
+        "icon": QUARTZY_ICON,
+        "color": "#FF6B42"
     }
 }
-
 # Initialize session state
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
@@ -418,6 +450,17 @@ st.markdown("""
     .stAlert {
         background-color: rgba(255, 255, 255, 0.9) !important;
         backdrop-filter: blur(10px);
+    }
+    /* SVG icon styling */
+    .tool-icon svg {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 0.5rem;
+        transition: transform 0.2s;
+    }
+    
+    .external-tool-card:hover .tool-icon svg {
+        transform: scale(1.1);
     }
 </style>
 """, unsafe_allow_html=True)
