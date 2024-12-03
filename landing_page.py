@@ -20,13 +20,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# Debug information
-if DEBUG:
-    st.write("Base URL:", BASE_URL)
-    st.write("Redirect URI:", REDIRECT_URI)
 
 # Initialize OAuth flow
-try:
     flow = Flow.from_client_config(
         client_config={
             "web": {
