@@ -1,48 +1,20 @@
 import streamlit as st
-from streamlit_lottie import st_lottie
-import requests
-import re
-import hmac
-import hashlib
+from google_auth_oauthlib.flow import Flow
+from google.oauth2 import id_token
+from google.auth.transport import requests
+import os
+import pathlib
+import requests as http_requests
 
-# Initialize session state for authentication
+# Google OAuth credentials
+CLIENT_SECRETS_FILE = "client_secret.json"
+SCOPES = ['https://www.googleapis.com/auth/userinfo.email']
+
+# Initialize session state
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
-
-def check_password():
-    """Returns `True` if the user had the correct password."""
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.session_state["password_correct"]):
-            st.session_state.authenticated = True
-            del st.session_state["password"]  # Don't store password
-            del st.session_state["password_correct"]
-            return True
-        else:
-            st.session_state.authenticated = False
-            st.error("😕 Password incorrect")
-            return False
-
-    if "authenticated" not in st.session_state:
-        # First run, show input for password
-        st.text_input(
-            "Password", type="password", key="password",
-            on_change=password_entered)
-        return False
-    elif not st.session_state.authenticated:
-        # Password not correct, show input + error
-        st.text_input(
-            "Password", type="password", key="password",
-            on_change=password_entered)
-        return False
-    else:
-        # Password correct
-        return True
-
-def is_valid_ketos_email(email):
-    """Validate if email is a ketos.co domain"""
-    pattern = r'^[a-zA-Z0-9._%+-]+@ketos\.co$'
-    return re.match(pattern, email) is not None
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = None
 
 # Page configuration
 st.set_page_config(
@@ -90,10 +62,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    .stTextInput > div > div > input {
-        border-radius: 4px;
-    }
-    
     .login-header {
         text-align: center;
         margin-bottom: 2rem;
@@ -105,8 +73,49 @@ st.markdown("""
         font-size: 14px;
         margin-top: 1rem;
     }
+    
+    .google-button {
+        background-color: white !important;
+        color: #757575 !important;
+        border: 1px solid #ddd !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .google-button:hover {
+        background-color: #f5f5f5 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+def is_valid_ketos_email(email):
+    """Validate if email is a ketos.co domain"""
+    return email.lower().endswith('@ketos.co')
+
+def initialize_google_auth():
+    """Initialize Google OAuth flow"""
+    flow = Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE,
+        scopes=SCOPES,
+        redirect_uri='http://localhost:8501/callback'
+    )
+    return flow
+
+def verify_google_token(token):
+    """Verify Google OAuth token and extract user information"""
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            token, requests.Request(), os.getenv('GOOGLE_CLIENT_ID'))
+        return idinfo['email']
+    except ValueError:
+        return None
 
 # Main login interface
 if not st.session_state.authenticated:
@@ -119,24 +128,44 @@ if not st.session_state.authenticated:
         st.image("https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png", width=150)
         st.markdown('<p class="ketos-title">Welcome to KETOS Apps</p>', unsafe_allow_html=True)
         
-        # Login form
-        email = st.text_input("Email", placeholder="Enter your KETOS email")
-        st.session_state["password_correct"] = "your_secure_password"  # In production, use proper authentication
-        
-        if st.button("Login"):
-            if is_valid_ketos_email(email):
-                if check_password():
-                    st.session_state.authenticated = True
-                    st.rerun()
-            else:
-                st.error("Please enter a valid KETOS email address (@ketos.co)")
+        # Google Sign-In button
+        if st.button("Sign in with Google", key="google_signin"):
+            try:
+                flow = initialize_google_auth()
+                authorization_url, state = flow.authorization_url()
+                st.session_state.oauth_state = state
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={authorization_url}">', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Authentication error: {str(e)}")
         
         st.markdown('<div class="login-footer">Access restricted to KETOS employees only.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+# Callback handler
+elif 'code' in st.experimental_get_query_params():
+    code = st.experimental_get_query_params()['code'][0]
+    flow = initialize_google_auth()
+    flow.fetch_token(code=code)
+    
+    credentials = flow.credentials
+    email = verify_google_token(credentials.id_token)
+    
+    if email and is_valid_ketos_email(email):
+        st.session_state.authenticated = True
+        st.session_state.user_email = email
+        st.rerun()
+    else:
+        st.error("Please sign in with your KETOS email (@ketos.co)")
+        st.session_state.authenticated = False
+        if st.button("Try Again"):
+            st.rerun()
+
+# Main content after authentication
 else:
-    # Main content after authentication
     st.title("KETOS Internal Applications")
+    
+    # Display user info
+    st.markdown(f"Logged in as: {st.session_state.user_email}")
     
     # App navigation
     col1, col2, col3 = st.columns(3)
@@ -168,5 +197,6 @@ else:
     # Logout option
     if st.button("Logout", key="logout"):
         st.session_state.authenticated = False
+        st.session_state.user_email = None
         st.rerun()
 
