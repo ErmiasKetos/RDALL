@@ -7,73 +7,80 @@ import os
 # Debug mode
 DEBUG = True
 
-# OAuth Configuration
-GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
-GOOGLE_CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
-BASE_URL = "https://2kdjdf2ktdyukylfaxdtbf.streamlit.app"
-REDIRECT_URI = f"{BASE_URL}/_oauth/callback"
-
-# Page config
+# Page Configuration
 st.set_page_config(
     page_title="KETOS Apps Login",
     page_icon="🌊",
     layout="wide"
 )
 
+# OAuth Configuration
+try:
+    GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
+    GOOGLE_CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
+except KeyError:
+    st.error("Google OAuth credentials are missing in st.secrets.")
+    st.stop()
 
-# Initialize OAuth flow
-flow = Flow.from_client_config(
-    client_config={
-        "web": {
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": [REDIRECT_URI]
-        }
-    },
-    scopes=[
-        'openid',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
-    ]
-)
-flow.redirect_uri = REDIRECT_URI
-    
+BASE_URL = "https://2kdjdf2ktdyukylfaxdtbf.streamlit.app"
+REDIRECT_URI = f"{BASE_URL}/_oauth/callback"
+
+if DEBUG:
+    st.write("Base URL:", BASE_URL)
+    st.write("Redirect URI:", REDIRECT_URI)
+
+# Initialize OAuth Flow
+try:
+    flow = Flow.from_client_config(
+        client_config={
+            "web": {
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [REDIRECT_URI]
+            }
+        },
+        scopes=[
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ]
+    )
+    flow.redirect_uri = REDIRECT_URI
     if DEBUG:
-        st.write("Flow initialized successfully")
+        st.write("OAuth Flow initialized successfully.")
 except Exception as e:
-    if DEBUG:
-        st.error(f"Flow initialization error: {str(e)}")
+    st.error(f"Error initializing OAuth Flow: {e}")
+    st.stop()
 
-# Initialize session state
+# Initialize Session State
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'auth_error' not in st.session_state:
     st.session_state.auth_error = None
 
-# Main app
+# Main Application Logic
 if not st.session_state.authenticated:
-    col1, col2, col3 = st.columns([1,2,1])
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         st.image("https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png", width=150)
         st.title("KETOS Apps Login")
         
-        # Debug current state
         if DEBUG:
             st.write("Query Parameters:", st.experimental_get_query_params())
         
-        # Handle OAuth callback
+        # Handle OAuth Callback
         if 'code' in st.experimental_get_query_params():
             code = st.experimental_get_query_params()['code'][0]
             try:
                 if DEBUG:
-                    st.write("Processing OAuth callback with code")
-                
+                    st.write("Processing OAuth callback with code.")
+
                 flow.fetch_token(code=code)
                 credentials = flow.credentials
-                
+
                 idinfo = id_token.verify_oauth2_token(
                     credentials.id_token,
                     requests.Request(),
@@ -89,29 +96,26 @@ if not st.session_state.authenticated:
                     st.rerun()
                 else:
                     st.error("Please use your KETOS email address to login.")
-                    
             except Exception as e:
                 if DEBUG:
-                    st.error(f"Authentication error: {str(e)}")
+                    st.error(f"Authentication error: {e}")
                 st.session_state.auth_error = str(e)
         
-        # Sign in button
+        # Sign in Button
         if st.button("Sign in with Google"):
             try:
-                auth_url = flow.authorization_url(
+                auth_url, _ = flow.authorization_url(
                     access_type='offline',
                     include_granted_scopes='true',
                     prompt='consent'
-                )[0]
+                )
                 
                 if DEBUG:
                     st.write("Generated Auth URL:", auth_url)
                 
                 st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
             except Exception as e:
-                if DEBUG:
-                    st.error(f"Error generating auth URL: {str(e)}")
-
+                st.error(f"Error generating auth URL: {e}")
 else:
     st.success("Successfully authenticated!")
     if st.button("Logout"):
