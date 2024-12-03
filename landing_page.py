@@ -5,9 +5,9 @@ from google.auth.transport import requests
 import os
 
 # Google OAuth credentials
-GOOGLE_CLIENT_ID = os.getenv('714525819545-ndq1ndid320qkh06lsrv4mt5hc7kvbeg.apps.googleusercontent.com')
-GOOGLE_CLIENT_SECRET = os.getenv('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T')
-REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://2kdjdf2ktdyukylfaxdtbf.streamlit.app/')
+GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
+GOOGLE_CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
+REDIRECT_URI = st.secrets["REDIRECT_URI"]
 
 # Allowed email addresses
 ALLOWED_EMAILS = {
@@ -18,8 +18,13 @@ ALLOWED_EMAILS = {
 }
 
 # Check if credentials are set
-if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-    st.error("Google OAuth credentials are not set. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.")
+if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not REDIRECT_URI:
+    st.error("""
+    Google OAuth credentials are not set. Please ensure you've added the following secrets in your Streamlit Cloud app settings:
+    - GOOGLE_CLIENT_ID
+    - GOOGLE_CLIENT_SECRET
+    - REDIRECT_URI
+    """)
     st.stop()
 
 # Create a Flow object
