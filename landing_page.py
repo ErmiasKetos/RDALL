@@ -1,8 +1,10 @@
-miimport streamlit as st
+import streamlit as st
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import os
+import json
+from urllib.parse import quote
 
 # Google OAuth credentials
 GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
@@ -14,40 +16,41 @@ ALLOWED_EMAILS = {
     "ermias@ketos.co",
     "user2@ketos.co",
     "user3@ketos.co"
-    # Add more allowed email addresses here
 }
 
-# Check if credentials are set
-if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not REDIRECT_URI:
-    st.error("""
-    Google OAuth credentials are not set. Please ensure you've added the following secrets in your Streamlit Cloud app settings:
-    - GOOGLE_CLIENT_ID
-    - GOOGLE_CLIENT_SECRET
-    - REDIRECT_URI
-    """)
-    st.stop()
+# Configure OAuth flow with additional parameters
+client_config = {
+    "web": {
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "redirect_uris": [REDIRECT_URI],
+        "javascript_origins": [REDIRECT_URI.rstrip('/')]
+    }
+}
 
-# Create a Flow object
-flow = Flow.from_client_config(
-    client_config={
-        "web": {
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-        }
-    },
-    scopes=['https://www.googleapis.com/auth/userinfo.email', 'openid'],
-    redirect_uri=REDIRECT_URI
-)
+try:
+    flow = Flow.from_client_config(
+        client_config=client_config,
+        scopes=[
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ]
+    )
+    flow.redirect_uri = REDIRECT_URI
+except Exception as e:
+    st.error(f"Error configuring OAuth: {str(e)}")
+    st.stop()
 
 # Initialize session state
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'user_email' not in st.session_state:
     st.session_state.user_email = None
-if 'error' not in st.session_state:
-    st.session_state.error = None
+if 'oauth_state' not in st.session_state:
+    st.session_state.oauth_state = None
 
 # Page configuration
 st.set_page_config(
@@ -57,7 +60,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS to match KETOS branding
+# Custom CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -94,51 +97,51 @@ st.markdown("""
         font-weight: 600;
         margin-bottom: 1rem;
     }
-    
-    .login-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    
-    .login-footer {
-        text-align: center;
-        color: #666;
-        font-size: 14px;
-        margin-top: 1rem;
-    }
-    
-    .google-button {
-        background-color: white !important;
-        color: #757575 !important;
-        border: 1px solid #ddd !important;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-    }
-    
-    .google-button:hover {
-        background-color: #f5f5f5 !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-def is_allowed_email(email):
-    """Validate if email is in the allowed list"""
-    return email.lower() in ALLOWED_EMAILS
-
-def verify_google_token(token):
-    """Verify Google OAuth token and extract user information"""
+def generate_auth_url():
+    """Generate Google OAuth URL with proper parameters"""
     try:
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
-        return idinfo['email']
-    except ValueError:
+        auth_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent',
+            state=st.session_state.oauth_state
+        )
+        st.session_state.oauth_state = state
+        return auth_url
+    except Exception as e:
+        st.error(f"Error generating auth URL: {str(e)}")
         return None
+
+def verify_oauth_state(received_state):
+    """Verify OAuth state parameter"""
+    return received_state == st.session_state.oauth_state
+
+def handle_oauth_callback(code):
+    """Handle OAuth callback and token exchange"""
+    try:
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        
+        id_info = id_token.verify_oauth2_token(
+            credentials.id_token,
+            requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+        
+        email = id_info.get('email', '').lower()
+        if email in ALLOWED_EMAILS:
+            st.session_state.authenticated = True
+            st.session_state.user_email = email
+            return True
+        else:
+            st.error("Access denied. Email not authorized.")
+            return False
+    except Exception as e:
+        st.error(f"Authentication error: {str(e)}")
+        return False
 
 # Main login interface
 if not st.session_state.authenticated:
@@ -151,44 +154,26 @@ if not st.session_state.authenticated:
         st.image("https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png", width=150)
         st.markdown('<p class="ketos-title">Welcome to KETOS Apps</p>', unsafe_allow_html=True)
         
-        # Display error message if there's an error
-        if st.session_state.error:
-            st.error(st.session_state.error)
-            st.session_state.error = None
+        # Handle OAuth callback
+        query_params = st.experimental_get_query_params()
+        if 'code' in query_params:
+            code = query_params['code'][0]
+            state = query_params.get('state', [None])[0]
+            
+            if verify_oauth_state(state):
+                if handle_oauth_callback(code):
+                    st.rerun()
+            else:
+                st.error("Invalid OAuth state. Please try again.")
         
         # Google Sign-In button
         if st.button("Sign in with Google", key="google_signin"):
-            try:
-                authorization_url, _ = flow.authorization_url(prompt='consent')
-                st.markdown(f'<meta http-equiv="refresh" content="0;url={authorization_url}">', unsafe_allow_html=True)
-            except Exception as e:
-                st.session_state.error = f"Error during authentication: {str(e)}"
-                st.rerun()
+            auth_url = generate_auth_url()
+            if auth_url:
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
         
         st.markdown('<div class="login-footer">Access restricted to authorized KETOS employees only.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-
-# Callback handler
-elif 'code' in st.experimental_get_query_params():
-    code = st.experimental_get_query_params()['code'][0]
-    try:
-        flow.fetch_token(code=code)
-        
-        credentials = flow.credentials
-        email = verify_google_token(credentials.id_token)
-        
-        if email and is_allowed_email(email):
-            st.session_state.authenticated = True
-            st.session_state.user_email = email
-            st.rerun()
-        else:
-            st.session_state.error = "Access denied. Please contact your administrator if you believe this is an error."
-            st.session_state.authenticated = False
-            st.rerun()
-    except Exception as e:
-        st.session_state.error = f"Error during authentication: {str(e)}"
-        st.session_state.authenticated = False
-        st.rerun()
 
 # Main content after authentication
 else:
@@ -228,5 +213,6 @@ else:
     if st.button("Logout", key="logout"):
         st.session_state.authenticated = False
         st.session_state.user_email = None
+        st.session_state.oauth_state = None
         st.rerun()
 
