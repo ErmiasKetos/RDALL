@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
+import random
 
 # Must be the first Streamlit command
 st.set_page_config(
@@ -190,15 +191,22 @@ if 'login_attempts' not in st.session_state:
     st.session_state.login_attempts = 0
 if 'lockout_until' not in st.session_state:
     st.session_state.lockout_until = None
+if 'last_tip_date' not in st.session_state:
+    st.session_state.last_tip_date = datetime.now().date()
+if 'current_tip' not in st.session_state:
+    st.session_state.current_tip = None
+if 'last_login_timestamp' not in st.session_state:
+    st.session_state.last_login_timestamp = None
 
 # Add tip management functions
-def get_daily_tip():
-    """Get a tip that changes daily"""
-    today = datetime.now().date()
-    if st.session_state.last_tip_date != today:
-        st.session_state.current_tip = random.choice(QUICK_TIPS)
-        st.session_state.last_tip_date = today
-    return st.session_state.current_tip
+def get_new_tip():
+    """Get a new random tip, ensuring it's different from the current one"""
+    if st.session_state.current_tip is None:
+        return random.choice(QUICK_TIPS)
+    
+    # Get all tips except the current one
+    available_tips = [tip for tip in QUICK_TIPS if tip != st.session_state.current_tip]
+    return random.choice(available_tips)
 
 # Custom CSS
 st.markdown("""
@@ -351,7 +359,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def verify_credentials(email, password):
-    return email in AUTHORIZED_USERS and password == MASTER_PASSWORD
+    """Verify credentials and update tip if successful"""
+    is_valid = email in AUTHORIZED_USERS and password == MASTER_PASSWORD
+    if is_valid:
+        # Update tip on successful login
+        st.session_state.current_tip = get_new_tip()
+        st.session_state.last_login_timestamp = datetime.now()
+    return is_valid
+
+def check_and_update_daily_tip():
+    """Check if it's a new day and update tip if needed"""
+    today = datetime.now().date()
+    if st.session_state.last_tip_date != today:
+        st.session_state.current_tip = get_new_tip()
+        st.session_state.last_tip_date = today
 
 def render_login_form():
     col1, col2, col3 = st.columns([1,2,1])
@@ -397,6 +418,9 @@ def render_login_form():
                         st.error("❌ Invalid email or password")
 
 def render_dashboard():
+    # First check if we need to update the daily tip
+    check_and_update_daily_tip()
+    
     user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
     st.markdown(f"""
         <div class="user-info">
@@ -409,13 +433,14 @@ def render_dashboard():
         if st.button("🚪 Logout", key="logout", type="primary"):
             st.session_state.authenticated = False
             st.session_state.user_email = None
+            # Don't reset the tip here, it will update on next login
             st.rerun()
 
-    # Get and display daily tip
-    current_tip = get_daily_tip()
+    # Display the current tip
+    current_tip = st.session_state.current_tip
     st.markdown(f"""
         <div class="quick-tip">
-            <h4>{current_tip['icon']} Quick Tip of the Day: {current_tip['title']}</h4>
+            <h4>{current_tip['icon']} Quick Tip: {current_tip['title']}</h4>
             <p>{current_tip['tip']}</p>
         </div>
     """, unsafe_allow_html=True)
