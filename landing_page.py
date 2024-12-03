@@ -14,6 +14,108 @@ APP_TITLE = "KETOS Internal Portal"
 APP_ICON = "🌊"
 COMPANY_LOGO = "https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png"
 
+# Add QUICK_TIPS configuration here
+QUICK_TIPS = [
+    # Existing general tips
+    {
+        "icon": "⚡",
+        "title": "ClickUp Shortcut",
+        "tip": "Use 'Ctrl + K' or 'Cmd + K' in ClickUp to quickly find tasks and projects."
+    },
+    {
+        "icon": "🔍", 
+        "title": "SDS Search Tip",
+        "tip": "Bookmark frequently accessed Safety Data Sheets for quick reference in future searches."
+    },
+    {
+        "icon": "📦",
+        "title": "Lab Inventory Management",
+        "tip": "Always update Quartzy immediately after using or receiving materials to maintain accurate inventory."
+    },
+    
+    # New R&D specific tips
+    {
+        "icon": "📝",
+        "title": "Data Recording",
+        "tip": "Document all experimental parameters, including environmental conditions, equipment settings, and any deviations from protocols."
+    },
+    {
+        "icon": "🔬",
+        "title": "Lab Notebook Practice",
+        "tip": "Record observations in real-time. Never rely on memory when it comes to experimental data."
+    },
+    {
+        "icon": "📸",
+        "title": "Visual Documentation",
+        "tip": "Take photos of experimental setups and unusual observations. A picture is worth a thousand words in R&D."
+    },
+    {
+        "icon": "🎯",
+        "title": "Calibration Records",
+        "tip": "Always verify and document calibration status of equipment before starting experiments."
+    },
+    {
+        "icon": "⚖️",
+        "title": "Raw Data Preservation",
+        "tip": "Save all raw data files with clear naming conventions and dates. Never overwrite original data."
+    },
+    {
+        "icon": "🔄",
+        "title": "Version Control",
+        "tip": "Maintain version control for analysis scripts and protocols. Document what changed and why."
+    },
+    {
+        "icon": "❌",
+        "title": "Error Documentation",
+        "tip": "Document errors and failed experiments - they're valuable learning opportunities and part of the R&D process."
+    },
+    {
+        "icon": "🔗",
+        "title": "Data Traceability",
+        "tip": "Ensure all data can be traced back to its source. Link raw data files to your experimental notes."
+    },
+    {
+        "icon": "📊",
+        "title": "Data Backup",
+        "tip": "Back up your data in multiple locations. Follow the 3-2-1 rule: 3 copies, 2 different media types, 1 off-site."
+    },
+    {
+        "icon": "📅",
+        "title": "Timeline Documentation",
+        "tip": "Record dates and times for all experimental steps, especially for time-sensitive procedures."
+    },
+    {
+        "icon": "🧪",
+        "title": "Method Documentation",
+        "tip": "Document detailed methods including lot numbers, concentrations, and any deviations from SOPs."
+    },
+    {
+        "icon": "🏷️",
+        "title": "Sample Labeling",
+        "tip": "Use clear, consistent labeling for all samples. Include date, experiment ID, and conditions."
+    },
+    {
+        "icon": "📈",
+        "title": "Data Analysis",
+        "tip": "Document all data processing steps and statistical methods used in your analysis."
+    },
+    {
+        "icon": "🤝",
+        "title": "Collaboration",
+        "tip": "When sharing data, include metadata and context so others can understand and reproduce your work."
+    },
+    {
+        "icon": "🔐",
+        "title": "Data Security",
+        "tip": "Protect sensitive R&D data. Use appropriate access controls and never share credentials."
+    },
+    {
+        "icon": "✔️",
+        "title": "Quality Checks",
+        "tip": "Implement regular quality checks of your documentation. Peer review can help catch missing information."
+    }
+]
+
 # User credentials with simple password
 AUTHORIZED_USERS = {
     "ermias@ketos.co": {"name": "Ermias"},
@@ -285,7 +387,6 @@ def render_login_form():
                     else:
                         st.error("❌ Invalid email or password")
 
-
 def render_dashboard():
     user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
     st.markdown(f"""
@@ -301,12 +402,12 @@ def render_dashboard():
             st.session_state.user_email = None
             st.rerun()
 
-    # Quick Tips Section
-    st.markdown("""
+    # Get and display daily tip
+    current_tip = get_daily_tip()
+    st.markdown(f"""
         <div class="quick-tip">
-            <h4>🌟 Quick Tip of the Day</h4>
-            <p>Use the search function in ClickUp to quickly find your tasks and projects. 
-            Press 'Ctrl + K' or 'Cmd + K' for quick navigation!</p>
+            <h4>{current_tip['icon']} Quick Tip of the Day: {current_tip['title']}</h4>
+            <p>{current_tip['tip']}</p>
         </div>
     """, unsafe_allow_html=True)
 
