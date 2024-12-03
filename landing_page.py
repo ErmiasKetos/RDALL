@@ -14,7 +14,7 @@ COMPANY_LOGO = "https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png
 # Security Configuration
 ALLOWED_DOMAIN = "ketos.co"
 ALLOWED_EMAILS = {
-    "user1@ketos.co",
+    "ermias@ketos.co",
     "user2@ketos.co",
     "user3@ketos.co"
 }
