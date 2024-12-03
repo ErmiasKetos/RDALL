@@ -4,7 +4,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 import os
 import json
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 # Google OAuth credentials
 GOOGLE_CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
@@ -13,44 +13,34 @@ REDIRECT_URI = st.secrets["REDIRECT_URI"]
 
 # Allowed email addresses
 ALLOWED_EMAILS = {
-    "ermias@ketos.co",
+    "user1@ketos.co",
     "user2@ketos.co",
     "user3@ketos.co"
 }
 
-# Configure OAuth flow with additional parameters
-client_config = {
-    "web": {
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [REDIRECT_URI],
-        "javascript_origins": [REDIRECT_URI.rstrip('/')]
-    }
-}
-
-try:
-    flow = Flow.from_client_config(
-        client_config=client_config,
-        scopes=[
-            'openid',
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile'
-        ]
-    )
-    flow.redirect_uri = REDIRECT_URI
-except Exception as e:
-    st.error(f"Error configuring OAuth: {str(e)}")
-    st.stop()
+# Configure OAuth flow
+flow = Flow.from_client_config(
+    client_config={
+        "web": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+        }
+    },
+    scopes=[
+        'openid',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile'
+    ],
+    redirect_uri=REDIRECT_URI
+)
 
 # Initialize session state
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'user_email' not in st.session_state:
     st.session_state.user_email = None
-if 'oauth_state' not in st.session_state:
-    st.session_state.oauth_state = None
 
 # Page configuration
 st.set_page_config(
@@ -101,47 +91,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def generate_auth_url():
-    """Generate Google OAuth URL with proper parameters"""
+    """Generate Google OAuth URL"""
+    return flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='consent'
+    )[0]
+
+def verify_oauth2_token(token):
+    """Verify the OAuth2 token"""
     try:
-        auth_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent',
-            state=st.session_state.oauth_state
-        )
-        st.session_state.oauth_state = state
-        return auth_url
-    except Exception as e:
-        st.error(f"Error generating auth URL: {str(e)}")
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+        return idinfo
+    except ValueError:
         return None
-
-def verify_oauth_state(received_state):
-    """Verify OAuth state parameter"""
-    return received_state == st.session_state.oauth_state
-
-def handle_oauth_callback(code):
-    """Handle OAuth callback and token exchange"""
-    try:
-        flow.fetch_token(code=code)
-        credentials = flow.credentials
-        
-        id_info = id_token.verify_oauth2_token(
-            credentials.id_token,
-            requests.Request(),
-            GOOGLE_CLIENT_ID
-        )
-        
-        email = id_info.get('email', '').lower()
-        if email in ALLOWED_EMAILS:
-            st.session_state.authenticated = True
-            st.session_state.user_email = email
-            return True
-        else:
-            st.error("Access denied. Email not authorized.")
-            return False
-    except Exception as e:
-        st.error(f"Authentication error: {str(e)}")
-        return False
 
 # Main login interface
 if not st.session_state.authenticated:
@@ -155,22 +120,26 @@ if not st.session_state.authenticated:
         st.markdown('<p class="ketos-title">Welcome to KETOS Apps</p>', unsafe_allow_html=True)
         
         # Handle OAuth callback
-        query_params = st.experimental_get_query_params()
-        if 'code' in query_params:
-            code = query_params['code'][0]
-            state = query_params.get('state', [None])[0]
-            
-            if verify_oauth_state(state):
-                if handle_oauth_callback(code):
+        if 'code' in st.experimental_get_query_params():
+            code = st.experimental_get_query_params()['code'][0]
+            try:
+                flow.fetch_token(code=code)
+                credentials = flow.credentials
+                token_info = verify_oauth2_token(credentials.id_token)
+                
+                if token_info and token_info['email'] in ALLOWED_EMAILS:
+                    st.session_state.authenticated = True
+                    st.session_state.user_email = token_info['email']
                     st.rerun()
-            else:
-                st.error("Invalid OAuth state. Please try again.")
+                else:
+                    st.error("Access denied. Please use an authorized KETOS email.")
+            except Exception as e:
+                st.error(f"Authentication error: {str(e)}")
         
         # Google Sign-In button
         if st.button("Sign in with Google", key="google_signin"):
             auth_url = generate_auth_url()
-            if auth_url:
-                st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
         
         st.markdown('<div class="login-footer">Access restricted to authorized KETOS employees only.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -213,6 +182,5 @@ else:
     if st.button("Logout", key="logout"):
         st.session_state.authenticated = False
         st.session_state.user_email = None
-        st.session_state.oauth_state = None
         st.rerun()
 
