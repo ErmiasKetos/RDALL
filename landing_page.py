@@ -11,7 +11,7 @@ REDIRECT_URI = st.secrets["REDIRECT_URI"]
 
 # Allowed email addresses
 ALLOWED_EMAILS = {
-    "ermias@ketos.co",
+    "user1@ketos.co",
     "user2@ketos.co",
     "user3@ketos.co"
     # Add more allowed email addresses here
@@ -46,6 +46,8 @@ if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 if 'user_email' not in st.session_state:
     st.session_state.user_email = None
+if 'error' not in st.session_state:
+    st.session_state.error = None
 
 # Page configuration
 st.set_page_config(
@@ -149,10 +151,19 @@ if not st.session_state.authenticated:
         st.image("https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png", width=150)
         st.markdown('<p class="ketos-title">Welcome to KETOS Apps</p>', unsafe_allow_html=True)
         
+        # Display error message if there's an error
+        if st.session_state.error:
+            st.error(st.session_state.error)
+            st.session_state.error = None
+        
         # Google Sign-In button
         if st.button("Sign in with Google", key="google_signin"):
-            authorization_url, _ = flow.authorization_url(prompt='consent')
-            st.markdown(f'<meta http-equiv="refresh" content="0;url={authorization_url}">', unsafe_allow_html=True)
+            try:
+                authorization_url, _ = flow.authorization_url(prompt='consent')
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={authorization_url}">', unsafe_allow_html=True)
+            except Exception as e:
+                st.session_state.error = f"Error during authentication: {str(e)}"
+                st.rerun()
         
         st.markdown('<div class="login-footer">Access restricted to authorized KETOS employees only.</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -160,20 +171,24 @@ if not st.session_state.authenticated:
 # Callback handler
 elif 'code' in st.experimental_get_query_params():
     code = st.experimental_get_query_params()['code'][0]
-    flow.fetch_token(code=code)
-    
-    credentials = flow.credentials
-    email = verify_google_token(credentials.id_token)
-    
-    if email and is_allowed_email(email):
-        st.session_state.authenticated = True
-        st.session_state.user_email = email
-        st.rerun()
-    else:
-        st.error("Access denied. Please contact your administrator if you believe this is an error.")
-        st.session_state.authenticated = False
-        if st.button("Try Again"):
+    try:
+        flow.fetch_token(code=code)
+        
+        credentials = flow.credentials
+        email = verify_google_token(credentials.id_token)
+        
+        if email and is_allowed_email(email):
+            st.session_state.authenticated = True
+            st.session_state.user_email = email
             st.rerun()
+        else:
+            st.session_state.error = "Access denied. Please contact your administrator if you believe this is an error."
+            st.session_state.authenticated = False
+            st.rerun()
+    except Exception as e:
+        st.session_state.error = f"Error during authentication: {str(e)}"
+        st.session_state.authenticated = False
+        st.rerun()
 
 # Main content after authentication
 else:
