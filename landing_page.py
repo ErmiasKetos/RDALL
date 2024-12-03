@@ -1,5 +1,4 @@
 import streamlit as st
-import hashlib
 from datetime import datetime, timedelta
 
 # Configuration
@@ -7,22 +6,14 @@ APP_TITLE = "KETOS Internal Apps"
 APP_ICON = "🌊"
 COMPANY_LOGO = "https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png"
 
-# User credentials - In production, use a secure database or secret management system
-# Format: "email": {"password": "hashed_password", "name": "User Name"}
+# User credentials with simple password
 AUTHORIZED_USERS = {
-    "ermias@ketos.co": {
-        "password": "18221822",  
-        "name": "User One"
-    },
-    "user2@ketos.co": {
-        "password": "18221822",
-        "name": "User Two"
-    },
-    "user3@ketos.co": {
-        "password": "18221822",
-        "name": "User Three"
-    }
+    "user1@ketos.co": {"name": "User One"},
+    "user2@ketos.co": {"name": "User Two"},
+    "user3@ketos.co": {"name": "User Three"}
 }
+
+MASTER_PASSWORD = "18221822"
 
 # App URLs
 APPS = {
@@ -39,6 +30,14 @@ APPS = {
         "description": "Purchase Order Request System"
     }
 }
+
+# Page config
+st.set_page_config(
+    page_title=APP_TITLE,
+    page_icon=APP_ICON,
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # Custom CSS
 st.set_page_config(
