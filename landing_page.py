@@ -13,7 +13,7 @@ st.set_page_config(
 # Configuration
 APP_TITLE = "KETOS Internal Portal"
 APP_ICON = "🌊"
-COMPANY_LOGO = "https://www.ketos.co/wp-content/uploads/2022/03/ketos-logo-1.png"
+COMPANY_LOGO = "https://ketos.co/wp-content/uploads/elementor/thumbs/Ketos-logo-greyscale-reverse-qw7eercrw2fahyp2ls6si2mhzwl37uzsepgbof8wv0.png"
 
 # Add QUICK_TIPS configuration here
 QUICK_TIPS = [
