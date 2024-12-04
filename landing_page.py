@@ -526,7 +526,7 @@ def render_login_form():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         
         # Logo and title
-        st.image(COMPANY_LOGO, width=150, use_column_width=True)
+        st.image(COMPANY_LOGO, width=10, use_column_width=True)
         st.markdown(f'<p class="ketos-title">{APP_TITLE}</p>', unsafe_allow_html=True)
         
         # Welcome message
