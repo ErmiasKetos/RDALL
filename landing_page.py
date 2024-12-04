@@ -13,7 +13,7 @@ st.set_page_config(
 # Configuration
 APP_TITLE = "KETOS Internal Portal"
 APP_ICON = "🌊"
-COMPANY_LOGO = "https://internalportal.ktplatformservices.com//assets/images/logo30-30.png"
+COMPANY_LOGO = "https://internal.ktplatformservices.com/assets/logo-alt.png"
 
 # Add QUICK_TIPS configuration here
 QUICK_TIPS = [
