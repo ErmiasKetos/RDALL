@@ -526,7 +526,7 @@ def render_login_form():
         st.markdown(
             f"""
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <img src="{COMPANY_LOGO}" width="45">
+                <img src="{COMPANY_LOGO}" width="60">
                 <p class="ketos-title">{APP_TITLE}</p>
             </div>
             """,
