@@ -518,17 +518,20 @@ def check_and_update_daily_tip():
     if st.session_state.last_tip_date != today:
         st.session_state.current_tip = get_new_tip()
         st.session_state.last_tip_date = today
-
-def render_login_form():
-    col1, col2, col3 = st.columns([1,2,1])
-    
-    with col2:
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
         
-        # Logo and title
-        st.image="{COMPANY_LOGO}" class="tool-icon"
-       #st.image(COMPANY_LOGO, width= 45,  use_column_width=False)
-        st.markdown(f'<p class="ketos-title">{APP_TITLE}</p>', unsafe_allow_html=True)
+def render_login_form():
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown(
+            f"""
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="{COMPANY_LOGO}" width="45">
+                <p class="ketos-title">{APP_TITLE}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         
         # Welcome message
         st.markdown("""
