@@ -134,7 +134,7 @@ INTERNAL_APPS = {
         "color": "#2E86C1"
     },
     "KCF LIMS": {
-        "url": "https://4ekgis64qetw42fdkrynsn.streamlit.app",
+        "url": "https://cftrayopt-r6gdayozdmjhkjchvypgw9.streamlit.app/",
         "description": "KCTray Management",
         "icon": "🧪",
         "color": "#27AE60"
