@@ -276,7 +276,7 @@ st.markdown("""
         max-width: 400px;
         margin: auto;
         padding: 2rem;
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 1);
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(46, 134, 193, 0.1);
         border: 1px solid rgba(46, 134, 193, 0.1);
@@ -526,7 +526,7 @@ def render_login_form():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         
         # Logo and title
-        st.image(COMPANY_LOGO, width=10, use_column_width=False)
+        st.image(COMPANY_LOGO, width=30, use_column_width=False)
         st.markdown(f'<p class="ketos-title">{APP_TITLE}</p>', unsafe_allow_html=True)
         
         # Welcome message
