@@ -503,67 +503,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-    /* Previous existing CSS remains the same */
-
-    /* New styles for app cards */
-    .stMarkdown div > a.app-card {
-        display: block;
-        margin-bottom: 1rem;
-    }
-
-    .app-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-    }
-
-    .app-card {
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 12px;
-        padding: 1rem;
-        text-decoration: none;
-        transition: transform 0.3s, box-shadow 0.3s;
-        border: 1px solid rgba(46, 134, 193, 0.1);
-    }
-
-    .app-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
-    }
-
-    .app-icon {
-        font-size: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        margin-right: 1rem;
-    }
-
-    .app-info {
-        flex-grow: 1;
-    }
-
-    .app-info h3 {
-        margin: 0 0 0.5rem 0;
-        color: #2C3E50;
-        font-size: 1.2rem;
-    }
-
-    .app-info p {
-        margin: 0;
-        color: #666;
-        font-size: 0.9rem;
-    }
-</style>
-""", unsafe_allow_html=True)
 def verify_credentials(email, password):
     """Verify credentials and update tip if successful"""
     is_valid = email in AUTHORIZED_USERS and password == MASTER_PASSWORD
@@ -627,50 +566,34 @@ def render_login_form():
                     else:
                         st.error("❌ Invalid email or password")
 
+
 def render_dashboard():
     """Render the modern dashboard layout."""
-    # First check if we need to update the daily tip
+    # Check if we need to update the daily tip
     check_and_update_daily_tip()
     
     user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
     
-    # Header with user info and logout
-    st.markdown(f"""
-        <div class="user-info">
-            <span>👋 Welcome back, <strong>{user_name}</strong>!</span>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col_logout, = st.columns([1])
-    with col_logout:
-        if st.button("🚪 Logout", key="logout", type="primary"):
-            st.session_state.authenticated = False
-            st.session_state.user_email = None
-            st.rerun()
-
-    # Display the current tip
-    current_tip = st.session_state.current_tip
-    st.markdown(f"""
-        <div class="quick-tip">
-            <h4>{current_tip['icon']} Quick Tip: {current_tip['title']}</h4>
-            <p>{current_tip['tip']}</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Add enhanced dashboard header and styling
-    st.markdown(f"""
+    # Modern Header Section with User Profile
+    st.markdown("""
         <div class="dashboard-header">
             <div class="profile-section">
                 <div class="profile-avatar">
-                    {user_name[0].upper()}
+                    {initial}
                 </div>
                 <div class="profile-info">
-                    <h3>Welcome back, {user_name}!</h3>
+                    <h3>Welcome back, {name}!</h3>
                     <p>Have a great day at work 🌟</p>
                 </div>
             </div>
         </div>
+    """.format(
+        initial=user_name[0].upper(),
+        name=user_name
+    ), unsafe_allow_html=True)
 
+    # Quick Actions Bar
+    st.markdown("""
         <div class="quick-actions-bar">
             <div class="action-buttons">
                 <button onclick="window.open('https://app.clickup.com', '_blank')" class="action-button">
@@ -686,35 +609,47 @@ def render_dashboard():
         </div>
     """, unsafe_allow_html=True)
 
+    # Daily Tip Card - More prominent placement
+    current_tip = st.session_state.current_tip
+    st.markdown(f"""
+    <a href="{app_info['url']}" target="_blank" class="card-link">
+        <div class="internal-app-card" style="border-top: 4px solid {app_info['color']}">
+            <div>
+                <div class="internal-app-icon">{app_info['icon']}</div>
+                <div class="internal-app-title">{app_name}</div>
+                <p>{app_info['description']}</p>
+            </div>
+        </div>
+    </a>
+""", unsafe_allow_html=True)
+
     # Main Content Area
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Internal Apps Section
+        # Internal Apps Grid
         st.markdown('<h2 class="section-title">Internal Applications</h2>', unsafe_allow_html=True)
-
-        # Create a container to hold the app cards
-        app_cards_html = """
-        <div class="app-grid">
+        
+        # New grid layout for internal apps
+        app_grid = """
+            <div class="app-grid">
         """
-
+        
         for app_name, app_info in INTERNAL_APPS.items():
-            app_cards_html += f"""
-            <a href="{app_info['url']}" target="_blank" class="app-card">
-                <div class="app-icon" style="background: {app_info['color']}20">
-                    {app_info['icon']}
-                </div>
-                <div class="app-info">
-                    <h3>{app_name}</h3>
-                    <p>{app_info['description']}</p>
-                </div>
-            </a>
+            app_grid += f"""
+                <a href="{app_info['url']}" target="_blank" class="app-card">
+                    <div class="app-icon" style="background: {app_info['color']}20">
+                        {app_info['icon']}
+                    </div>
+                    <div class="app-info">
+                        <h3>{app_name}</h3>
+                        <p>{app_info['description']}</p>
+                    </div>
+                </a>
             """
-
-        app_cards_html += "</div>"
-
-        # Render the app cards
-        st.markdown(app_cards_html, unsafe_allow_html=True)
+        
+        app_grid += "</div>"
+        st.markdown(app_grid, unsafe_allow_html=True)
 
     with col2:
         # Quick Tools Section
@@ -733,7 +668,7 @@ def render_dashboard():
                 </a>
             """, unsafe_allow_html=True)
 
-    # Dashboard Footer with Support Section
+    # Footer with Help and Support
     st.markdown("""
         <div class="dashboard-footer">
             <div class="support-section">
@@ -756,34 +691,7 @@ def render_dashboard():
         </div>
     """, unsafe_allow_html=True)
 
-    # Instructions and Help Section
-    with st.expander("📚 Instructions & Help"):
-        st.markdown("""
-            ### Getting Started
-            1. **Internal Apps**: Access KETOS-specific applications
-                - WBCal: Manage probe calibrations
-                - KCF LIMS: Laboratory data management
-                - PO Request: Submit purchase orders
-            
-            2. **Quick Access Tools**:
-                - ClickUp: Task and project management
-                - Slack: Team communication
-                - Google Drive: Document storage
-                - SDS Search: Safety Data Sheet database
-                - Lab Inventory: Quartzy inventory management
-            
-            ### Need Help?
-            - For technical issues: Contact IT Support
-            - For app-specific questions: Reach out to the respective team leads
-            - For access requests: Submit through IT support ticket
-            
-            ### Quick Tips
-            - Click directly on any card to open the respective application
-            - Keep your password secure and don't share it
-            - Log out when you're done for security
-        """)
-
-    # Add the enhanced CSS for dashboard elements
+    # Add the enhanced CSS
     st.markdown("""
     <style>
         /* Modern Dashboard Styles */
@@ -848,67 +756,84 @@ def render_dashboard():
             transform: translateY(-2px);
         }
 
-        /* App Cards and Grid Styles */
+        .tip-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tip-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tip-icon {
+            font-size: 2rem;
+        }
+
         .app-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .app-card {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.95);
+            background: #ffffff;
+            padding: 1.5rem;
             border-radius: 12px;
-            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s;
             text-decoration: none;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid rgba(46, 134, 193, 0.1);
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .app-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(46, 134, 193, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
 
         .app-icon {
-            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            margin-right: 1rem;
+            font-size: 24px;
         }
 
-        .app-info {
-            flex-grow: 1;
+        .tool-card {
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
         }
 
-        .app-info h3 {
-            margin: 0 0 0.5rem 0;
-            color: #2C3E50;
-            font-size: 1.2rem;
+        .tool-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        .app-info p {
-            margin: 0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        /* Dashboard Footer Styles */
         .dashboard-footer {
             background: #ffffff;
             padding: 2rem;
             border-radius: 12px;
             margin-top: 3rem;
-        }
-
-        .support-section h4 {
-            margin-bottom: 1rem;
-            color: #2c3e50;
         }
 
         .support-links {
@@ -943,6 +868,34 @@ def render_dashboard():
         }
     </style>
     """, unsafe_allow_html=True)
+
+
+    # Instructions and Help Section
+    with st.expander("📚 Instructions & Help"):
+        st.markdown("""
+            ### Getting Started
+            1. **Internal Apps**: Access KETOS-specific applications
+                - WBCal: Manage probe calibrations
+                - KCF LIMS: Laboratory data management
+                - PO Request: Submit purchase orders
+            
+            2. **Quick Access Tools**:
+                - ClickUp: Task and project management
+                - Slack: Team communication
+                - Google Drive: Document storage
+                - SDS Search: Safety Data Sheet database
+                - Lab Inventory: Quartzy inventory management
+            
+            ### Need Help?
+            - For technical issues: Contact IT Support
+            - For app-specific questions: Reach out to the respective team leads
+            - For access requests: Submit through IT support ticket
+            
+            ### Quick Tips
+            - Click directly on any card to open the respective application
+            - Keep your password secure and don't share it
+            - Log out when you're done for security
+        """)
     
 
 # Main app logic
