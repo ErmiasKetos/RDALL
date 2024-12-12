@@ -870,10 +870,6 @@ def render_dashboard():
     </style>
     """, unsafe_allow_html=True)
 
-    # Add Font Awesome for icons
-    st.markdown("""
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    """, unsafe_allow_html=True)
 
     # Instructions and Help Section
     with st.expander("📚 Instructions & Help"):
