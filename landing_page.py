@@ -566,7 +566,6 @@ def render_login_form():
                     else:
                         st.error("❌ Invalid email or password")
 
-
 def render_dashboard():
     """Render the modern dashboard layout."""
     # Check if we need to update the daily tip
@@ -612,16 +611,17 @@ def render_dashboard():
     # Daily Tip Card - More prominent placement
     current_tip = st.session_state.current_tip
     st.markdown(f"""
-    <a href="{app_info['url']}" target="_blank" class="card-link">
-        <div class="internal-app-card" style="border-top: 4px solid {app_info['color']}">
-            <div>
-                <div class="internal-app-icon">{app_info['icon']}</div>
-                <div class="internal-app-title">{app_name}</div>
-                <p>{app_info['description']}</p>
+        <div class="tip-card">
+            <div class="tip-header">
+                <span class="tip-icon">{current_tip['icon']}</span>
+                <h4>Today's Tip</h4>
+            </div>
+            <div class="tip-content">
+                <h5>{current_tip['title']}</h5>
+                <p>{current_tip['tip']}</p>
             </div>
         </div>
-    </a>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
     # Main Content Area
     col1, col2 = st.columns([2, 1])
