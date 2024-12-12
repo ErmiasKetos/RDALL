@@ -612,17 +612,16 @@ def render_dashboard():
     # Daily Tip Card - More prominent placement
     current_tip = st.session_state.current_tip
     st.markdown(f"""
-        <div class="tip-card">
-            <div class="tip-header">
-                <span class="tip-icon">{current_tip['icon']}</span>
-                <h4>Today's Tip</h4>
-            </div>
-            <div class="tip-content">
-                <h5>{current_tip['title']}</h5>
-                <p>{current_tip['tip']}</p>
+    <a href="{app_info['url']}" target="_blank" class="card-link">
+        <div class="internal-app-card" style="border-top: 4px solid {app_info['color']}">
+            <div>
+                <div class="internal-app-icon">{app_info['icon']}</div>
+                <div class="internal-app-title">{app_name}</div>
+                <p>{app_info['description']}</p>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    </a>
+""", unsafe_allow_html=True)
 
     # Main Content Area
     col1, col2 = st.columns([2, 1])
