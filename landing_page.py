@@ -567,8 +567,7 @@ def render_login_form():
                         st.error("❌ Invalid email or password")
 
 
-def render_dashboard():
-```python
+
 def render_dashboard():
     """Render the modern dashboard layout."""
     # Check if we need to update the daily tip
