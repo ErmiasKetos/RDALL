@@ -128,7 +128,7 @@ MASTER_PASSWORD = "18221822"
 # App and Tool Links
 INTERNAL_APPS = {
     "WBCal": {
-        "url": "https://caldash-eoewkytd6u7jyxfm2haaxn.streamlit.app",
+        "url": "https://jbrbbrprox6eahhujtmwls.streamlit.app/",
         "description": "Probe calibration and management system",
         "icon": "🔧",
         "color": "#2E86C1"
