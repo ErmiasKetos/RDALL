@@ -567,311 +567,108 @@ def render_login_form():
                         st.error("❌ Invalid email or password")
 
 
-
 def render_dashboard():
-    """Render the modern dashboard layout."""
-    # Check if we need to update the daily tip
+    # First check if we need to update the daily tip
     check_and_update_daily_tip()
     
     user_name = AUTHORIZED_USERS[st.session_state.user_email]["name"]
     
-    # Modern Header Section with User Profile
-    st.markdown("""
-        <div class="dashboard-header">
-            <div class="profile-section">
-                <div class="profile-avatar">
-                    {initial}
-                </div>
-                <div class="profile-info">
-                    <h3>Welcome back, {name}!</h3>
-                    <p>Have a great day at work 🌟</p>
-                </div>
-            </div>
-        </div>
-    """.format(
-        initial=user_name[0].upper(),
-        name=user_name
-    ), unsafe_allow_html=True)
-
-    # Quick Actions Bar
-    st.markdown("""
-        <div class="quick-actions-bar">
-            <div class="action-buttons">
-                <button onclick="window.open('https://app.clickup.com', '_blank')" class="action-button">
-                    <i class="fas fa-tasks"></i> Tasks
-                </button>
-                <button onclick="window.open('https://ketos.slack.com', '_blank')" class="action-button">
-                    <i class="fas fa-comment"></i> Chat
-                </button>
-                <button onclick="window.open('https://drive.google.com', '_blank')" class="action-button">
-                    <i class="fas fa-folder"></i> Drive
-                </button>
-            </div>
+    # Header with user info and logout
+    st.markdown(f"""
+        <div class="user-info">
+            <span>👋 Welcome back, <strong>{user_name}</strong>!</span>
         </div>
     """, unsafe_allow_html=True)
+    
+    col_logout, = st.columns([1])
+    with col_logout:
+        if st.button("🚪 Logout", key="logout", type="primary"):
+            st.session_state.authenticated = False
+            st.session_state.user_email = None
+            st.rerun()
 
-    # Daily Tip Card - More prominent placement
+    # Display the current tip
     current_tip = st.session_state.current_tip
     st.markdown(f"""
-        <div class="tip-card">
-            <div class="tip-header">
-                <span class="tip-icon">{current_tip['icon']}</span>
-                <h4>Today's Tip</h4>
-            </div>
-            <div class="tip-content">
-                <h5>{current_tip['title']}</h5>
-                <p>{current_tip['tip']}</p>
-            </div>
+        <div class="quick-tip">
+            <h4>{current_tip['icon']} Quick Tip: {current_tip['title']}</h4>
+            <p>{current_tip['tip']}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # Main Content Area
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Internal Apps Grid
-        st.markdown('<h2 class="section-title">Internal Applications</h2>', unsafe_allow_html=True)
-        
-        # New grid layout for internal apps
-        app_grid = """
-            <div class="app-grid">
-        """
-        
-        for app_name, app_info in INTERNAL_APPS.items():
-            app_grid += f"""
-                <a href="{app_info['url']}" target="_blank" class="app-card">
-                    <div class="app-icon" style="background: {app_info['color']}20">
-                        {app_info['icon']}
-                    </div>
-                    <div class="app-info">
-                        <h3>{app_name}</h3>
-                        <p>{app_info['description']}</p>
-                    </div>
-                </a>
-            """
-        
-        app_grid += "</div>"
-        st.markdown(app_grid, unsafe_allow_html=True)
-
-    with col2:
-        # Quick Tools Section
-        st.markdown('<h2 class="section-title">Quick Tools</h2>', unsafe_allow_html=True)
-        
-        for tool_name, tool_info in TOOLS.items():
+    # Internal Apps Section - Larger cards
+    st.markdown('<h2 class="section-title">Internal Applications</h2>', unsafe_allow_html=True)
+    cols_apps = st.columns(len(INTERNAL_APPS))
+    for col, (app_name, app_info) in zip(cols_apps, INTERNAL_APPS.items()):
+        with col:
             st.markdown(f"""
-                <a href="{tool_info['url']}" target="_blank" class="tool-card">
-                    <div class="tool-icon" style="color: {tool_info['color']}">
-                        {tool_info['icon']}
-                    </div>
-                    <div class="tool-info">
-                        <h4>{tool_name}</h4>
-                        <p>{tool_info['description']}</p>
+                <a href="{app_info['url']}" target="_blank" class="card-link">
+                    <div class="internal-app-card" style="border-top: 4px solid {app_info['color']}">
+                        <div>
+                            <div class="internal-app-icon">{app_info['icon']}</div>
+                            <div class="internal-app-title">{app_name}</div>
+                            <p>{app_info['description']}</p>
+                        </div>
                     </div>
                 </a>
             """, unsafe_allow_html=True)
 
-    # Footer with Help and Support
-    st.markdown("""
-        <div class="dashboard-footer">
-            <div class="support-section">
-                <h4>Need Help?</h4>
-                <div class="support-links">
-                    <a href="#" class="support-link">
-                        <i class="fas fa-question-circle"></i>
-                        Support Center
-                    </a>
-                    <a href="#" class="support-link">
-                        <i class="fas fa-book"></i>
-                        Documentation
-                    </a>
-                    <a href="#" class="support-link">
-                        <i class="fas fa-hands-helping"></i>
-                        IT Support
-                    </a>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    # External Tools Section - Smaller cards in a grid
+    st.markdown('<h2 class="section-title">Quick Access Tools</h2>', unsafe_allow_html=True)
+    
+    # Calculate number of columns (4 tools per row)
+    num_tools = len(TOOLS)
+    num_rows = (num_tools + 3) // 4  # Round up division
+    
+    # Create tools grid
+    for row in range(num_rows):
+        cols = st.columns(4)
+        for col_idx in range(4):
+            tool_idx = row * 4 + col_idx
+            if tool_idx < num_tools:
+                tool_name = list(TOOLS.keys())[tool_idx]
+                tool_info = TOOLS[tool_name]
+                with cols[col_idx]:
+                    st.markdown(f"""
+                        <a href="{tool_info['url']}" target="_blank" class="card-link">
+                            <div class="external-tool-card" style="border-top: 4px solid {tool_info['color']}">
+                                <div class="external-tool-icon">{tool_info['icon']}</div>
+                                <div class="external-tool-title">{tool_name}</div>
+                                <p>{tool_info['description']}</p>
+                            </div>
+                        </a>
+                    """, unsafe_allow_html=True)
 
-    # Add the enhanced CSS
-    st.markdown("""
-    <style>
-        /* Modern Dashboard Styles */
-        .dashboard-header {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-        }
-
-        .profile-section {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .profile-avatar {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #0071ba 0%, #00a6fb 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .quick-actions-bar {
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            overflow-x: auto;
-            padding: 0.5rem;
-        }
-
-        .action-button {
-            background: #f8f9fa;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .action-button:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-        }
-
-        .tip-card {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tip-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .tip-icon {
-            font-size: 2rem;
-        }
-
-        .app-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .app-card {
-            background: #ffffff;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .app-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-        }
-
-        .app-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .tool-card {
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.2s;
-        }
-
-        .tool-card:hover {
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .dashboard-footer {
-            background: #ffffff;
-            padding: 2rem;
-            border-radius: 12px;
-            margin-top: 3rem;
-        }
-
-        .support-links {
-            display: flex;
-            gap: 2rem;
-            margin-top: 1rem;
-        }
-
-        .support-link {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            color: #2c3e50;
-            transition: all 0.2s;
-        }
-
-        .support-link:hover {
-            color: #0071ba;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .app-grid {
-                grid-template-columns: 1fr;
-            }
+    # Instructions and Help Section
+    with st.expander("📚 Instructions & Help"):
+        st.markdown("""
+            ### Getting Started
+            1. **Internal Apps**: Access KETOS-specific applications
+                - WBCal: Manage probe calibrations
+                - KCF LIMS: Laboratory data management
+                - PO Request: Submit purchase orders
             
-            .support-links {
-                flex-direction: column;
-                gap: 1rem;
-            }
-        }
-    </style>
-    """, unsafe_allow_html=True)
+            2. **Quick Access Tools**:
+                - ClickUp: Task and project management
+                - Slack: Team communication
+                - Google Drive: Document storage
+                - SDS Search: Safety Data Sheet database
+                - Lab Inventory: Quartzy inventory management
+            
+            ### Need Help?
+            - For technical issues: Contact IT Support
+            - For app-specific questions: Reach out to the respective team leads
+            - For access requests: Submit through IT support ticket
+            
+            ### Quick Tips
+            - Click directly on any card to open the respective application
+            - Keep your password secure and don't share it
+            - Log out when you're done for security
+        """)
+    
 
-    # Add Font Awesome for icons
-    st.markdown("""
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    """, unsafe_allow_html=True)
+# Main app logic
+if not st.session_state.authenticated:
+    render_login_form()
+else:
+    render_dashboard()
