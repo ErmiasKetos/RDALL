@@ -2,6 +2,53 @@ import streamlit as st
 from datetime import datetime, timedelta
 import random
 
+# Add authentication check
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+def check_authentication(email, password):
+    """Verify user email is authorized and password is correct."""
+    return (email in st.secrets.auth.allowed_emails and 
+            password == st.secrets.auth.password)
+
+if not st.session_state.authenticated:
+    st.markdown("""
+        <style>
+            .login-container {
+                max-width: 400px;
+                margin: 50px auto;
+                padding: 30px;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+            .stButton > button {
+                background: #0071ba;
+                color: white;
+                width: 100%;
+            }
+        </style>
+        
+        <div class="login-container">
+            <h2 style='text-align: center; color: #0071ba; margin-bottom: 20px;'>
+                🧪 KETOS R&D Hub
+            </h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+    with st.form("login_form"):
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        
+        if st.form_submit_button("Login", use_container_width=True):
+            if check_authentication(email, password):
+                st.session_state.authenticated = True
+                st.session_state.user_email = email
+                st.rerun()
+            else:
+                st.error("Invalid email or password. Access restricted to authorized users only.")
+    st.stop()
+
 # Must be the first Streamlit command
 st.set_page_config(
     page_title="KETOS R&D Hub",
