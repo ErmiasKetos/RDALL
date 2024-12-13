@@ -1,8 +1,10 @@
+
+
 import streamlit as st
 from datetime import datetime, timedelta
 import random
 
-# Add authentication check
+# Authentication check 
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
@@ -11,6 +13,7 @@ def check_authentication(email, password):
     return (email in st.secrets.auth.allowed_emails and 
             password == st.secrets.auth.password)
 
+# Authentication UI 
 if not st.session_state.authenticated:
     st.markdown("""
         <style>
