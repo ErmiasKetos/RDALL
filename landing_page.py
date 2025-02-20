@@ -73,6 +73,12 @@ INTERNAL_APPS = {
         "icon": "🔧",
         "color": "#2E86C1"
     },
+    "KELAB": {
+        "url": "https://ejwzx8kdgasjxeef2wsjjw.streamlit.app/",
+        "description": "KELAB Scalability & Profitability Modeling",
+        "icon": "📊",
+        "color": "#2E86C1"
+    },
     "KCF LIMS": {
         "url": "https://cftrayopt-r6gdayozdmjhkjchvypgw9.streamlit.app/",
         "description": "KCTray Management",
